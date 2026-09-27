@@ -24,6 +24,12 @@ eq(lsd(0, 2, 6), 120, '半克朗 = 120 法寻');
 eq(format(lsd(5, 9, 5, 2)), '£5 9s 5½d', 'format 账面');
 eq(format(lsd(0, 0, 6)), '6d', 'format 纯便士');
 eq(format(lsd(0, 4)), '4s 0d', 'format 纯先令');
+// 只有法寻时不写前导零：账本上是「¼d」，不是「0¼d」
+eq(format(lsd(0, 0, 0, 1)), '¼d', 'format 单法寻不带前导零');
+eq(format(lsd(0, 0, 0, 3)), '¾d', 'format 三法寻不带前导零');
+eq(format(lsd(0, 0, 2, 3)), '2¾d', 'format 便士带法寻');
+eq(format(lsd(0, 1, 0, 1)), '1s ¼d', 'format 先令加单法寻');
+eq(format(0), '0d', 'format 零仍写 0d');
 eq(slash(lsd(0, 2, 11, 2)), '2/11½', 'slash 店头');
 eq(slash(lsd(0, 10)), '10/-', 'slash 整十先令');
 eq(slash(lsd(5, 9, 5, 2)), '£5 9/5½', 'slash 带镑');

@@ -72,11 +72,17 @@ const GLYPH = ['', '¼', '½', '¾'] as const;
 
 const glyphOf = (farthings: number): string => GLYPH[farthings] ?? '';
 
-/** 账面写法：£5 9s 5½d。零镑时省掉镑。 */
+/**
+ * 账面写法：£5 9s 5½d。零镑时省掉镑。
+ *
+ * 只有法寻、没有整便士时写「¼d」而不是「0¼d」—— 账本上不写那个零，
+ * 硬币面值本身就是四分之一便士。slash() 一直是这么做的，这里跟上。
+ */
 export function format(value: LSD): string {
   const p = parts(value);
   const sign = p.negative ? '-' : '';
-  const tail = `${p.pence}${glyphOf(p.farthings)}d`;
+  const pence = p.pence || !p.farthings ? String(p.pence) : '';
+  const tail = `${pence}${glyphOf(p.farthings)}d`;
   if (p.pounds) return `${sign}£${p.pounds} ${p.shillings}s ${tail}`;
   if (p.shillings) return `${sign}${p.shillings}s ${tail}`;
   return `${sign}${tail}`;
