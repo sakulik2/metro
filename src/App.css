@@ -1,0 +1,86 @@
+/* 顶部标识牌、内容区，以及列车进站的那一下。 */
+
+.sign {
+  border-bottom: 2px solid var(--ink);
+  background: var(--plate);
+}
+
+.sign-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  /* 控件 40px，上下各留 22px：牌面要有余量，不能贴着边框 */
+  padding: 22px 0;
+}
+
+.sign-name {
+  margin: 0;
+  flex: 1;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+
+.sign-toggle {
+  flex: none;
+  height: var(--control);
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+  font: 600 var(--control-text)/1 var(--sans);
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.sign-toggle:hover {
+  background: var(--ink);
+  color: var(--plate);
+}
+
+.stage {
+  flex: 1;
+  padding: 34px 0 40px;
+}
+
+/*
+ * 列车进站：换站时内容横向滑入。
+ * 全局唯一的非用户触发动效，靠 key={tick} 每站重放一次。
+ */
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateX(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.car {
+  animation: arrive .34s cubic-bezier(.22, .7, .28, 1) both;
+}
+
+@media (max-width: 560px) {
+  .sign-name {
+    font-size: 30px;
+  }
+
+  /* 只收窄左右内距，高度仍由 --control 统一管 */
+  .sign-toggle {
+    padding: 0 11px;
+    font-size: 14px;
+  }
+
+  .stage {
+    padding: 26px 0 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .car {
+    animation: none;
+  }
+}
