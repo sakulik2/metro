@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { GAMES, LINES } from '../data/lines';
+import { forgetCleared, readCleared, setCleared } from '../state/cleared';
 import { describe, hrefFor, parseTarget } from './testRoute';
 import './TestPanel.css';
 
@@ -9,6 +11,14 @@ import './TestPanel.css';
  * 索引卡，不是通用 debug 面板。
  */
 export function TestPanel({ unknown }: { unknown?: string }) {
+  // 改完立刻重读，这样按钮上的当前档位是真的
+  const [cleared, refresh] = useState(readCleared);
+
+  const setTier = (game: string, n: number) => {
+    setCleared(game, n);
+    refresh(readCleared());
+  };
+
   return (
     <div className="tp">
       <div className="tp-card">
@@ -55,6 +65,65 @@ export function TestPanel({ unknown }: { unknown?: string }) {
               </a>
             </li>
           </ul>
+        </section>
+
+        {/*
+          重玩难度。
+          难度是靠通关次数攒出来的，所以测三个档位本来得真玩三遍；
+          这里直接改那个数。对玩家也是退路：卡在第三档能退回去。
+        */}
+        <section className="tp-group">
+          <h2 className="tp-group-name">重玩难度</h2>
+          <p className="tp-how">
+            游戏第二遍开始收走提示。这里改的是「通关过几次」那个数，存在
+            localStorage 的 <code>metro:cleared</code> 里。
+          </p>
+          <ul className="tp-tiers">
+            {[
+              { id: 'booking', name: '售票窗口', tiers: ['给全部提示', '不给该找多少', '还要求最少枚数'] },
+              { id: 'drawing', name: '绘图室', tiers: ['给读数和影线', '只给影线', '只给站名'] },
+            ].map((g) => {
+              const now = cleared[g.id] ?? 0;
+              return (
+                <li key={g.id}>
+                  <span className="tp-tier-name">{g.name}</span>
+                  <span className="tp-tier-btns">
+                    {g.tiers.map((label, n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        className="tp-tier"
+                        aria-pressed={Math.min(now, 2) === n}
+                        onClick={() => setTier(g.id, n)}
+                      >
+                        第 {n + 1} 遍
+                        <i>{label}</i>
+                      </button>
+                    ))}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="tp-also">
+            通关次数：
+            {Object.keys(cleared).length === 0
+              ? '还没有记录'
+              : Object.entries(cleared)
+                  .map(([k, v]) => `${k} ${v} 次`)
+                  .join('，')}
+            {'　'}
+            <button
+              type="button"
+              className="tp-forget"
+              onClick={() => {
+                forgetCleared();
+                refresh(readCleared());
+              }}
+            >
+              全部忘掉
+            </button>
+          </p>
         </section>
 
         {/* 四条线，每条列出全部站 */}

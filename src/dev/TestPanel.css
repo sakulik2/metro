@@ -134,6 +134,80 @@
   outline-offset: 2px;
 }
 
+/* ── 重玩难度 ───────────────────────────────────── */
+
+.tp-tiers {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.tp-tiers li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.tp-tier-name {
+  flex: none;
+  width: 6.5em;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tp-tier-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 当前档位用洋红实底标出来，靠 aria-pressed 驱动，不另加 class */
+.tp-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--graphite);
+  background: transparent;
+  color: inherit;
+  padding: 6px 9px;
+  font: 600 13px/1.2 var(--sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tp-tier i {
+  font: 400 11px/1.3 var(--sans);
+  font-style: normal;
+  color: var(--note);
+}
+
+.tp-tier:hover {
+  border-color: var(--line);
+}
+
+.tp-tier[aria-pressed='true'] {
+  background: var(--line);
+  border-color: var(--line);
+  color: var(--paper);
+}
+
+.tp-tier[aria-pressed='true'] i {
+  color: rgb(255 255 255 / .8);
+}
+
+.tp-forget {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--line);
+  font: 600 14px/1 var(--sans);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .tp-back {
   margin: 26px 0 0;
   padding-top: 18px;
