@@ -1,0 +1,59 @@
+# 构建并发布到 GitHub Pages。
+#
+# 两件容易踩的事，都在下面写明了原因：
+#   · 用 npm ci 而不是 npm install —— 锁文件在库里，ci 严格照它装，
+#     package.json 和锁文件不同步就直接失败，不会悄悄换版本。
+#   · Pages 从子路径提供服务，所以构建要带 --base=/<repo>/，否则资源全 404。
+#     用命令行传而不写进 vite.config.ts，这样本地 dev 和 preview 不受影响。
+name: pages
+
+on:
+  push:
+    branches: [main]
+  # 手动也能发一次，改完 Pages 设置时用得上
+  workflow_dispatch:
+
+# 只读代码；写权限交给 Pages 那两个专用的
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同时只发一版。不取消进行中的那个，让它发完 —— 半途取消会留下发布不完整的状态。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # check:money 是 node scripts/check-money.ts，靠 Node 原生执行 TypeScript。
+      # 这需要 Node ≥ 22.6，是这个库唯一一条硬性版本要求。
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # 类型检查加三个数据校验脚本。这个库没有测试框架，这里就是那道闸。
+      - run: npm run check
+
+      - run: npm run build -- --base=/${{ github.event.repository.name }}/
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
