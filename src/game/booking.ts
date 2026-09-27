@@ -26,6 +26,10 @@ export type DecimalChoice = {
 export type DecimalDay = {
   year: number;
   title: string;
+  /** 1971 年的站名。1863 年叫 Farringdon Street，1936 年起才叫 Farringdon。 */
+  station: string;
+  /** 改名的经过，摆在站名底下一行小字。 */
+  renamed: string;
   intro: string;
   fare: LSD;
   choices: DecimalChoice[];
@@ -79,6 +83,8 @@ const dd = src.decimalDay as Record<string, unknown>;
 export const DECIMAL_DAY: DecimalDay = {
   year: Number(dd.year),
   title: String(dd.title),
+  station: String(dd.station),
+  renamed: String(dd.renamed),
   intro: String(dd.intro),
   fare: parse(String(dd.fare)),
   choices: (dd.choices as DecimalChoice[]).map((c) => ({
