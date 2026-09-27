@@ -25,6 +25,16 @@ export const STEP: Record<Dir, { dx: number; dy: number }> = {
   SE: { dx: 1, dy: 1 },
 };
 
+/**
+ * 每个方向对应的角度，和 leg.bearing 同一套坐标：0° 是正东，逆时针为正。
+ * 浮标上显示它，玩家自己拿去和真实走向比 —— 不直接告诉他偏了多少，
+ * 那道取整是这一关要练的东西。
+ */
+export const DIR_ANGLE: Record<Dir, number> = DIRS.reduce(
+  (m, d, i) => ({ ...m, [d]: i * 45 }),
+  {} as Record<Dir, number>,
+);
+
 /** 方向在界面上怎么称呼。 */
 export const DIR_NAME: Record<Dir, string> = {
   E: '正东',
