@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { GAMES, LINES } from '../data/lines';
+import { LINE_SETS } from '../game/drawing';
 import { forgetCleared, readCleared, setCleared } from '../state/cleared';
 import { describe, hrefFor, parseTarget } from './testRoute';
 import './TestPanel.css';
@@ -10,6 +11,15 @@ import './TestPanel.css';
  * 材料跟着绘图室走：方格纸、铅笔描边、零圆角 —— 它是钉在绘图室墙上的一张
  * 索引卡，不是通用 debug 面板。
  */
+/**
+ * 游戏 id → URL 里的短名。写在这里而不是数据里：这是测试入口的词汇表，
+ * 游戏本身不该知道自己在地址栏里叫什么。
+ */
+const GAME_SLUGS: Record<string, string> = { booking: 'ticket', drawing: 'drawing' };
+
+/** 绘图室每条线的短名，下标对应 LINE_SETS。 */
+const DRAWING_SLUGS = ['beck', 'irt'];
+
 export function TestPanel({ unknown }: { unknown?: string }) {
   // 改完立刻重读，这样按钮上的当前档位是真的
   const [cleared, refresh] = useState(readCleared);
@@ -41,7 +51,7 @@ export function TestPanel({ unknown }: { unknown?: string }) {
           <h2 className="tp-group-name">游戏</h2>
           <ul className="tp-list">
             {Object.entries(GAMES).map(([line, id]) => {
-              const slug = id === 'booking' ? 'ticket' : 'drawing';
+              const slug = GAME_SLUGS[id] ?? id;
               return (
                 <li key={id}>
                   <a href={hrefFor(slug)}>
@@ -58,6 +68,20 @@ export function TestPanel({ unknown }: { unknown?: string }) {
                 <span>{describe({ kind: 'game', line: 0, stage: 'decimal' })}</span>
               </a>
             </li>
+            {/* 绘图室每条线各给一个直达入口，免得为了看第二条线去改通关次数 */}
+            {LINE_SETS.map((s, set) => {
+              const slug = DRAWING_SLUGS[set] ?? String(set);
+              return (
+                <li key={s.title}>
+                  <a href={hrefFor(slug)}>
+                    <code>{slug}</code>
+                    <span>
+                      {s.title}（{s.year}）
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
             <li>
               <a href={hrefFor('end')}>
                 <code>end</code>
@@ -75,8 +99,9 @@ export function TestPanel({ unknown }: { unknown?: string }) {
         <section className="tp-group">
           <h2 className="tp-group-name">重玩难度</h2>
           <p className="tp-how">
-            游戏第二遍开始收走提示。这里改的是「通关过几次」那个数，存在
-            localStorage 的 <code>metro:cleared</code> 里。
+            游戏第二遍开始收走提示，同时换内容。这里改的是「通关过几次」那个数，存在
+            localStorage 的 <code>metro:cleared</code> 里。绘图室的线也跟着这个数轮换（
+            {LINE_SETS.map((s) => s.title).join(' → ')} → 循环），难度封顶在第三档。
           </p>
           <ul className="tp-tiers">
             {[

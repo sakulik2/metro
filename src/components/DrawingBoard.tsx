@@ -155,16 +155,23 @@ export function DrawingBoard({ set }: { set?: number } = {}) {
               />
             )}
 
-            {/* 地理实况上的站位，小空心点 */}
+            {/*
+              地理实况上的站位，小空心点。
+
+              点画得比正解上的小一圈，因为真实站距可以非常近：1904 年 IRT 的
+              市政厅到布鲁克林桥只有 0.17 公里，在任何诚实的缩放下这两点都会挨上。
+              那个挨上是真的（市政厅站 1945 年停用，原因之一正是离布鲁克林桥站
+              太近），所以缩点不缩距 —— 改缩放会把这个事实抹掉。
+            */}
             {aid.ghost && geoPts.map((p, i) => (
               <circle
                 key={`geo-${line.stations[i]?.name ?? i}`}
                 cx={px(p.x)}
                 cy={py(p.y)}
-                r="4"
+                r="3"
                 fill="var(--paper)"
                 stroke="var(--ghost)"
-                strokeWidth="2"
+                strokeWidth="1.5"
               />
             ))}
 

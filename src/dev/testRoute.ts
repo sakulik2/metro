@@ -1,4 +1,5 @@
 import type { Stage } from '../game/booking';
+import { SET_COUNT, setOf } from '../game/drawing';
 import { GAMES, LINES } from '../data/lines';
 import type { Picks } from '../data/types';
 import type { Journey } from '../state/journey';
@@ -16,8 +17,11 @@ import type { Journey } from '../state/journey';
 
 export type Target =
   | { kind: 'stop'; line: number; stop: number }
-  /** stage 只对售票窗口有意义：它内部还分 1863 和 1971 两段。 */
-  | { kind: 'game'; line: number; stage?: Stage }
+  /**
+   * stage 只对售票窗口有意义：它内部还分 1863 和 1971 两段。
+   * set 只对绘图室有意义：画哪条线。
+   */
+  | { kind: 'game'; line: number; stage?: Stage; set?: number }
   | { kind: 'transfer'; line: number }
   | { kind: 'end' };
 
@@ -31,9 +35,15 @@ const ALIASES: Record<string, () => Target | null> = {
   decimal: () => gameTarget('booking', 'decimal'),
   '1971': () => gameTarget('booking', 'decimal'),
   十进制: () => gameTarget('booking', 'decimal'),
+  // 绘图室。不带后缀时跟着通关次数走，带了就指定画哪条线。
   drawing: () => gameTarget('drawing'),
-  beck: () => gameTarget('drawing'),
   绘图: () => gameTarget('drawing'),
+  beck: () => drawingSet('beck'),
+  london: () => drawingSet('beck'),
+  伦敦: () => drawingSet('beck'),
+  irt: () => drawingSet('irt'),
+  纽约: () => drawingSet('irt'),
+  '1904': () => drawingSet('irt'),
   // 终点
   end: () => ({ kind: 'end' }),
   finish: () => ({ kind: 'end' }),
@@ -45,6 +55,21 @@ function gameTarget(id: string, stage?: Stage): Target | null {
   const entry = Object.entries(GAMES).find(([, g]) => g === id);
   if (!entry) return null;
   return { kind: 'game', line: Number(entry[0]), ...(stage ? { stage } : {}) };
+}
+
+/**
+ * 绘图室的某一条线。
+ *
+ * 别名到下标的映射写在这里而不是数据里：它只服务测试路由，
+ * 而数据集本身不该知道自己在 URL 里叫什么。
+ */
+const DRAWING_SETS: Record<string, number> = { beck: 0, irt: 1 };
+
+function drawingSet(alias: string): Target | null {
+  const t = gameTarget('drawing');
+  const set = DRAWING_SETS[alias];
+  if (!t || t.kind !== 'game' || set === undefined || set >= SET_COUNT) return null;
+  return { ...t, set };
 }
 
 /** 线路的英文短名，取自题库文件名，可以直接写在 URL 里。 */
@@ -185,7 +210,12 @@ export function describe(target: Target): string {
     }
     case 'game': {
       const id = GAMES[target.line];
-      if (id !== 'booking') return '绘图室（1931）';
+      if (id !== 'booking') {
+        // 标题和年份从数据集自己来，不写死在这里
+        if (target.set === undefined) return `绘图室（按通关次数选线，共 ${SET_COUNT} 条）`;
+        const s = setOf(target.set);
+        return `${s.title}（${s.year}）`;
+      }
       return target.stage === 'decimal' ? '售票窗口 · 十进制日（1971）' : '售票窗口（1863）';
     }
     case 'transfer':

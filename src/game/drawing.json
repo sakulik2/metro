@@ -115,6 +115,127 @@
         "London Museum: How Harry Beck revolutionised the Tube map",
         "各站坐标：Wikipedia geo 数据（现代继承站）"
       ]
+    },
+    {
+      "station": "绘图",
+      "title": "制图室",
+      "year": 1904,
+      "who": "Interborough Rapid Transit，纽约",
+      "intro": "1904 年 10 月 27 日，纽约第一条地铁通车。它不走直线：沿公园大道北上，到 42 街往西折，再沿百老汇继续北上——一个 Z 字。把它画成只有横、竖、45 度斜线的图。",
+      "task": "逐段选方向，把 7 个站连起来。每段只能取 45 度的整数倍，而且要挑最接近真实走向的那一个。",
+      "rule": "横、竖、45 度斜线，三种之外不画。",
+      "colour": "#006B2D",
+      "colourHover": "#005C27",
+      "colourNote": "1904 年这条线早于纽约地铁的颜色系统。它后来被拆开：公园大道段成了莱克星顿大道线（绿，PMS 355），百老汇段成了百老汇-第七大道线（红，PMS 185），中间那截 42 街在 1918 年「H 系统」通车后成了独立的接驳线。这里取莱克星顿绿的谱系并为方格纸压暗——是有理由的选择，不是查到的 1904 年官方色。",
+      "blindHint": "1904 年画图的人手里也没有一张按比例的曼哈顿图。",
+      "stations": [
+        {
+          "name": "市政厅",
+          "historicName": "City Hall",
+          "lat": 40.7126,
+          "lon": -74.0067
+        },
+        {
+          "name": "布鲁克林桥",
+          "historicName": "Brooklyn Bridge",
+          "lat": 40.7128,
+          "lon": -74.0047
+        },
+        {
+          "name": "十四街",
+          "historicName": "14th Street",
+          "lat": 40.7347,
+          "lon": -73.9903
+        },
+        {
+          "name": "中央车站",
+          "historicName": "Grand Central",
+          "lat": 40.7522,
+          "lon": -73.9775
+        },
+        {
+          "name": "时报广场",
+          "historicName": "Times Square",
+          "lat": 40.756,
+          "lon": -73.987
+        },
+        {
+          "name": "七十二街",
+          "historicName": "72nd Street",
+          "lat": 40.779,
+          "lon": -73.9819
+        },
+        {
+          "name": "九十六街",
+          "historicName": "96th Street",
+          "lat": 40.7941,
+          "lon": -73.972
+        }
+      ],
+      "legs": [
+        {
+          "from": "市政厅",
+          "to": "布鲁克林桥",
+          "km": 0.17,
+          "bearing": 7.5,
+          "snap": "E",
+          "offBy": 7.5
+        },
+        {
+          "from": "布鲁克林桥",
+          "to": "十四街",
+          "km": 2.72,
+          "bearing": 63.5,
+          "snap": "NE",
+          "offBy": 18.5
+        },
+        {
+          "from": "十四街",
+          "to": "中央车站",
+          "km": 2.22,
+          "bearing": 61,
+          "snap": "NE",
+          "offBy": 16
+        },
+        {
+          "from": "中央车站",
+          "to": "时报广场",
+          "km": 0.9,
+          "bearing": 152.2,
+          "snap": "NW",
+          "offBy": 17.2
+        },
+        {
+          "from": "时报广场",
+          "to": "七十二街",
+          "km": 2.59,
+          "bearing": 80.5,
+          "snap": "N",
+          "offBy": -9.5
+        },
+        {
+          "from": "七十二街",
+          "to": "九十六街",
+          "km": 1.87,
+          "bearing": 63.6,
+          "snap": "NE",
+          "offBy": 18.6
+        }
+      ],
+      "reveal": {
+        "title": "图画好了，六十八年后有人照这么画了整张网",
+        "spacing": "图上每段一样长，地面上不是。市政厅到布鲁克林桥 0.17 公里，布鲁克林桥到十四街 2.72 公里——差 16.0 倍，图上却看不出来。",
+        "distortion": "最短那一段本身就是一段历史：市政厅站 1945 年底停用，原因之一正是它离更繁忙的布鲁克林桥站只有约 600 英尺。它的站台在弯道上，240 英尺只容五节车，而当时要跑十节。最后一年它的客流是 25.5 万人次，布鲁克林桥站是 1400 万。",
+        "history": "1972 年 8 月，Massimo Vignelli 为纽约地铁做的图正是这个画法：只走横、竖、斜，站点按等间距排布而不是按真实距离。它只用了七年。1975 年成立的地图委员会想把地理还回来，1979 年换成了 Michael Hertz 那张按地理画的图。然后 2025 年 4 月 2 日，一版改过的 Vignelli 图重新成为官方图——同一个手法，先被否掉，最后被追认。"
+      },
+      "sources": [
+        "Wikipedia: Early history of the IRT subway（1904 路线与开通时的快车站）",
+        "Wikipedia: New York City Subway map（1972 启用、1979 替换、2025-04-02 重新启用）",
+        "纽约交通博物馆 Vignelli 展页（站点按等间距排布，而非地理上准确的距离）",
+        "Wikipedia: City Hall station (IRT Lexington Avenue Line)（约 600 英尺、240 英尺站台、客流）",
+        "Wikipedia: New York City Subway nomenclature（PMS 355 / PMS 185 色号）",
+        "各站坐标：Wikipedia geo 数据（现代继承站）"
+      ]
     }
   ]
 }

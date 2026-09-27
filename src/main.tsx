@@ -26,6 +26,7 @@ function render() {
       <App
         start={journeyFor(route.target)}
         gameStage={route.target.kind === 'game' ? route.target.stage : undefined}
+        gameSet={route.target.kind === 'game' ? route.target.set : undefined}
       />
     ) : (
       <App />
