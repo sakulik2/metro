@@ -4,18 +4,32 @@
  * 这一关刻意不用测验那套现代站内标识的冷灰：那是 1970 年代以后的视觉语言。
  * 窗口是煤气灯下的木格子 —— 暗绿漆木、黄铜格栅、硬纸板票价单。
  * 大胆只花在硬币上：它们按真实直径画，其余一切退到背景里。
+ *
+ * 槽位名字取中性的角色名（ground/accent/slip/face），不叫「木头」「黄铜」：
+ * 这一关之后还要装进别的年代，叫死材料名到那时就是个谎。
  */
 
 .booking {
-  --wood: #23352C;      /* 漆木隔板，煤气灯下的暗绿 */
-  --wood-dark: #16211B;
-  --brass: #C9A227;     /* 黄铜格栅与铜牌 */
-  --card: #E8DFC8;      /* 硬纸板票价单 */
-  --card-ink: #2A2118;
-  --lamp: #F0E4C4;      /* 灯光落在木头上的字 */
+  --ground: #23352C;      /* 漆木隔板，煤气灯下的暗绿 */
+  --ground-dark: #16211B;
+  --accent: #C9A227;      /* 黄铜格栅与铜牌 */
+  --slip: #E8DFC8;        /* 硬纸板票价单 */
+  --slip-ink: #2A2118;
+  --face: #F0E4C4;        /* 灯光落在木头上的字 */
+  --rule: #3C4C42;        /* 分隔线 */
+  --dim: #A69B7E;         /* 次级文字 */
+  --body-text: #D7CBA8;
+  --body-dim: #BDB294;    /* 比 body-text 再退一档 */
+  --wrong-edge: #8C4A42;
+  --edge: #4A5A50;        /* 次级按钮和未选中卡片的描边 */
+  --on-accent: #21160A;   /* 压在 accent 填色上的字 */
+  --accent-lift: #E0B92C; /* accent 的 hover */
+  --accent-soft: rgb(201 162 39 / .12);
+  --accent-dash: rgb(201 162 39 / .5);
+  --accent-wash: rgb(201 162 39 / .08);
 
-  background: var(--wood);
-  color: var(--lamp);
+  background: var(--ground);
+  color: var(--face);
   border-top: 4px solid var(--ink);
   border-bottom: 4px solid var(--ink);
   padding: 0 0 34px;
@@ -23,9 +37,9 @@
 }
 
 .booking-head {
-  border-bottom: 3px solid var(--brass);
+  border-bottom: 3px solid var(--accent);
   padding: 20px var(--gut) 16px;
-  background: var(--wood-dark);
+  background: var(--ground-dark);
 }
 
 /* 年份是这一关的定位，比标题还先读到 */
@@ -33,7 +47,7 @@
   margin: 0 0 2px;
   font: 700 15px/1 var(--cond);
   letter-spacing: .12em;
-  color: var(--brass);
+  color: var(--accent);
 }
 
 .booking-title {
@@ -53,14 +67,14 @@
   max-width: 44ch;
   font-size: 16px;
   line-height: 1.7;
-  color: #D7CBA8;
+  color: var(--body-text);
 }
 
 /* ── 票价单：硬纸板 ─────────────────────────────── */
 
 .fare-slip {
-  background: var(--card);
-  color: var(--card-ink);
+  background: var(--slip);
+  color: var(--slip-ink);
   padding: 18px 20px;
   margin: 0 0 22px;
   max-width: 34em;
@@ -125,7 +139,7 @@
 /* ── 找零托盘 ───────────────────────────────────── */
 
 .tray {
-  border: 2px dashed rgb(201 162 39 / .5);
+  border: 2px dashed var(--accent-dash);
   padding: 16px;
   margin: 0 0 22px;
   max-width: 34em;
@@ -140,8 +154,8 @@
 .tray[data-state="exact"],
 .tray[data-state="done"] {
   border-style: solid;
-  border-color: var(--brass);
-  background: rgb(201 162 39 / .08);
+  border-color: var(--accent);
+  background: var(--accent-wash);
 }
 
 .tray-coins {
@@ -156,14 +170,14 @@
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #A69B7E;
+  color: var(--dim);
 }
 
 .tray-sum {
   margin: 0;
   font: 600 14px/1.4 var(--cond);
   letter-spacing: .03em;
-  color: var(--brass);
+  color: var(--accent);
 }
 
 /* ── 钱屉 ───────────────────────────────────────── */
@@ -180,7 +194,7 @@
   gap: 4px;
   padding: 22px 14px 16px;
   margin: 0 0 20px;
-  background: var(--wood-dark);
+  background: var(--ground-dark);
   box-shadow: inset 0 2px 0 rgb(0 0 0 / .3);
   overflow-x: auto;
 }
@@ -233,32 +247,32 @@
 }
 
 .brass {
-  border: 2px solid var(--brass);
-  background: var(--brass);
-  color: #21160A;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .brass:hover:not(:disabled) {
-  background: #E0B92C;
-  border-color: #E0B92C;
+  background: var(--accent-lift);
+  border-color: var(--accent-lift);
 }
 
 .brass:disabled {
   background: transparent;
   color: #8C8268;
-  border-color: #4A5A50;
+  border-color: var(--edge);
   cursor: not-allowed;
 }
 
 .plain {
-  border: 2px solid #4A5A50;
+  border: 2px solid var(--edge);
   background: transparent;
-  color: var(--lamp);
+  color: var(--face);
 }
 
 .plain:hover:not(:disabled) {
-  border-color: var(--brass);
-  color: var(--brass);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .plain:disabled {
@@ -268,14 +282,14 @@
 }
 
 .booking :focus-visible {
-  outline: 2px solid var(--brass);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
 /* ── 找对之后 ───────────────────────────────────── */
 
 .settled {
-  border-top: 3px solid var(--brass);
+  border-top: 3px solid var(--accent);
   padding-top: 18px;
   max-width: 40em;
 }
@@ -284,14 +298,14 @@
   margin: 0 0 8px;
   font-size: 17px;
   font-weight: 700;
-  color: var(--brass);
+  color: var(--accent);
 }
 
 .settled-teach {
   margin: 0 0 20px;
   font-size: 15px;
   line-height: 1.7;
-  color: #D7CBA8;
+  color: var(--body-text);
 }
 
 /* ── 1971 年那一关 ──────────────────────────────── */
@@ -300,7 +314,7 @@
   margin: 0 0 12px;
   font: 700 15px/1 var(--cond);
   letter-spacing: .1em;
-  color: var(--brass);
+  color: var(--accent);
 }
 
 /* 旧写法和新写法并排，中间一个问号 —— 这就是那天的问题本身 */
@@ -310,8 +324,8 @@
   flex-wrap: wrap;
   gap: 14px;
   padding: 18px 0 22px;
-  border-top: 1px solid #3C4C42;
-  border-bottom: 1px solid #3C4C42;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
   margin: 0 0 24px;
 }
 
@@ -325,14 +339,14 @@
 .decimal-eq {
   font: 600 14px/1 var(--cond);
   letter-spacing: .05em;
-  color: #A69B7E;
+  color: var(--dim);
 }
 
 .decimal-new {
   font-size: 40px;
   font-weight: 700;
   line-height: 1;
-  color: var(--brass);
+  color: var(--accent);
 }
 
 .decimal-picks {
@@ -348,17 +362,17 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  border: 2px solid #4A5A50;
+  border: 2px solid var(--edge);
   border-radius: 2px;
   background: transparent;
-  color: var(--lamp);
+  color: var(--face);
   padding: 14px 15px;
   text-align: left;
   cursor: pointer;
 }
 
 .decimal-pick:hover:not([aria-disabled]) {
-  border-color: var(--brass);
+  border-color: var(--accent);
 }
 
 .decimal-pick[aria-disabled] {
@@ -367,8 +381,8 @@
 
 /* 法定答案：黄铜实边。其余两个说得通的暗下去，直接错的划掉 */
 .decimal-pick[data-verdict="right"] {
-  border-color: var(--brass);
-  background: rgb(201 162 39 / .12);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .decimal-pick[data-verdict="other"] {
@@ -376,7 +390,7 @@
 }
 
 .decimal-pick[data-verdict="wrong"] {
-  border-color: #8C4A42;
+  border-color: var(--wrong-edge);
   opacity: .7;
 }
 
@@ -389,15 +403,15 @@
 .pick-sub {
   font: 600 12px/1.3 var(--cond);
   letter-spacing: .04em;
-  color: #A69B7E;
+  color: var(--dim);
 }
 
 .decimal-pick[data-verdict="right"] .pick-sub {
-  color: var(--brass);
+  color: var(--accent);
 }
 
 .decimal-why {
-  border-top: 3px solid var(--brass);
+  border-top: 3px solid var(--accent);
   padding-top: 18px;
   max-width: 44em;
 }
@@ -406,23 +420,23 @@
   margin: 0 0 14px;
   font-size: 14px;
   line-height: 1.7;
-  color: #BDB294;
+  color: var(--body-dim);
 }
 
 .decimal-why p[data-verdict="right"] {
-  color: var(--lamp);
+  color: var(--face);
 }
 
 .decimal-why b {
   display: block;
   margin-bottom: 3px;
   font-size: 14px;
-  color: var(--brass);
+  color: var(--accent);
 }
 
 .decimal-check {
   padding: 12px 14px;
-  background: var(--wood-dark);
+  background: var(--ground-dark);
   font-size: 13px;
 }
 
@@ -462,3 +476,4 @@
     transition: none;
   }
 }
+

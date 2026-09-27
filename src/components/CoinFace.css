@@ -48,8 +48,8 @@
   height: 18px;
   padding: 0 4px;
   border-radius: 9px;
-  background: var(--brass);
-  color: #21160A;
+  background: var(--accent);
+  color: var(--on-accent);
   font: 700 11px/18px var(--cond);
   text-align: center;
 }
@@ -76,7 +76,7 @@
 }
 
 .coin-pick:focus-visible {
-  outline: 2px solid var(--brass);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
