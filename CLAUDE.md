@@ -16,10 +16,11 @@ Regenerate it from a clean install (`rm -rf node_modules package-lock.json && np
 npm install            # or yarn / pnpm install / bun install
 npm run dev            # dev server
 npm run build          # tsc -b && vite build
-npm run check          # types + all three validators; run this before calling work done
+npm run check          # types + all four validators; run this before calling work done
 npm run check:lines    # question bank only
 npm run check:money    # £sd arithmetic only
 npm run check:drawing  # drawing-board data only
+npm run check:tiers    # replay difficulty only
 ```
 
 **Node must be ≥ 22.6.** `check:money` is `node scripts/check-money.ts` and relies on Node executing TypeScript natively; on older Node it fails outright. That is the one hard version constraint — the package manager is free, the runtime is not. There is no lint step.
@@ -53,7 +54,25 @@ Prefer this over a throwaway entry that mounts a single component. Such a previe
 
 1971 is British Rail's 1965 corporate identity: rail blue BS 381C 114, warning yellow BS 381C 356, signal red BS 381C 537, pearl grey for the bodyside band. Rail Alphabet is not bundled — Barlow stands in, which is an honest approximation rather than a pretend one. The double arrow is a geometric approximation in inline SVG; the two diagonals **must stay parallel** (the lower arrow is the upper one rotated 180° about the viewBox centre), because crossing them makes it a different mark.
 
-`newGame(stage?)` and `BookingOffice({ stage })` exist only so `/test/decimal` can reach 1971 without counting change five times.
+`newGame(stage?, run?)` and `BookingOffice({ stage })` exist only so `/test/decimal` can reach 1971 without counting change five times.
+
+### Replays change the content, not just the difficulty
+
+`src/state/cleared.ts` is the **only persistence in the project** (`localStorage`, key `metro:cleared`). It holds a per-game clear count, which drives two things:
+
+- **Content** — `runFor(game)` is uncapped. Each booking-office passenger has three `variants`, picked by `variantOf(round, run)`, cycling when they run out.
+- **Difficulty** — `tierOf(count)` caps at 2. Tier 1 is as before; tier 2 drops the "该找" line and the tray's running gap; tier 3 also demands the fewest coins.
+
+Both halves are needed. Withholding hints alone makes a replay reward *remembering* the five amounts rather than doing the subtraction, so `check:tiers` requires every amount within a passenger to be distinct. Conversely, new content alone would leave the same scaffolding propping it up. **The fares themselves never vary** — they are verified history; what varies is how many tickets and which coin is handed over.
+
+Two traps, both already fallen into, that `check:tiers` now guards:
+
+- **A disabled button is a leak.** `交给乘客` used to disable until the amount was exact, which announced the answer as loudly as the running total. Past tier 1 you may hand over anything; the passenger counts it and pushes it back.
+- **A withheld hint must have a way back.** Being stuck is not difficulty. Each game offers a two-step hint the player asks for — direction first, then the figure. One step straight to the answer just gets pressed immediately.
+
+Every read and write of `localStorage` is wrapped in try/catch: it throws outright in private mode. Any failure is treated as a first run, because failing to read progress should cost a difficulty tier, not show a blank screen.
+
+Scripts that import app code need `scripts/resolve-src.ts` and **must use `await import`** — `src/` omits file extensions and imports JSON plainly (Vite's `moduleResolution: bundler`), and static imports all resolve before any module body runs, so the hook would register too late.
 
 ### Games hang off a registry
 
@@ -87,10 +106,11 @@ These exist because each one caught a real bug. They are the closest thing this 
 - **`check:lines`** — the important one: a stop label must not give away its own answer. The line map shows every label from the moment you board, so labels like "波士顿" / "布达" published the answer before the question was read. Also checks answer indices, duplicate options, colliding line colours, over-long labels.
 - **`check:money`** — 36 assertions taken from `predecimal`'s own tests and the text of the Decimal Currency Act 1969. If the money is wrong the booking office has no point.
 - **`check:drawing`** — recomputes bearings/distances from coordinates, refuses a self-crossing polyline, and fails if the longest leg is under 1.5× the shortest, since then the level has nothing to reveal.
+- **`check:tiers`** — the replay difficulty. Tiers must tighten monotonically, every tier that withholds something must have a two-step hint that can get it back, the second step must yield something actionable, and a passenger's sets must ask for different amounts. It caught two amount collisions that had passed visual review.
 
 ## CI
 
-`.github/workflows/pages.yml` builds `main` to GitHub Pages with npm — npm specifically for CI, even though local work is package-manager-free. The gate is `npm run check` (types + all three validators), which runs before the build.
+`.github/workflows/pages.yml` builds `main` to GitHub Pages with npm — npm specifically for CI, even though local work is package-manager-free. The gate is `npm run check` (types + all four validators), which runs before the build.
 
 Two things it gets right on purpose, so don't "simplify" them back:
 

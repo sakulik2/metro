@@ -39,7 +39,7 @@ jobs:
 
       - run: npm ci
 
-      # 类型检查加三个数据校验脚本。这个库没有测试框架，这里就是那道闸。
+      # 类型检查加四个数据校验脚本。这个库没有测试框架，这里就是那道闸。
       - run: npm run check
 
       - run: npm run build -- --base=/${{ github.event.repository.name }}/
