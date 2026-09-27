@@ -1,0 +1,464 @@
+/*
+ * 1863 年的售票窗口。
+ *
+ * 这一关刻意不用测验那套现代站内标识的冷灰：那是 1970 年代以后的视觉语言。
+ * 窗口是煤气灯下的木格子 —— 暗绿漆木、黄铜格栅、硬纸板票价单。
+ * 大胆只花在硬币上：它们按真实直径画，其余一切退到背景里。
+ */
+
+.booking {
+  --wood: #23352C;      /* 漆木隔板，煤气灯下的暗绿 */
+  --wood-dark: #16211B;
+  --brass: #C9A227;     /* 黄铜格栅与铜牌 */
+  --card: #E8DFC8;      /* 硬纸板票价单 */
+  --card-ink: #2A2118;
+  --lamp: #F0E4C4;      /* 灯光落在木头上的字 */
+
+  background: var(--wood);
+  color: var(--lamp);
+  border-top: 4px solid var(--ink);
+  border-bottom: 4px solid var(--ink);
+  padding: 0 0 34px;
+  margin: 0 0 34px;
+}
+
+.booking-head {
+  border-bottom: 3px solid var(--brass);
+  padding: 20px var(--gut) 16px;
+  background: var(--wood-dark);
+}
+
+/* 年份是这一关的定位，比标题还先读到 */
+.booking-year {
+  margin: 0 0 2px;
+  font: 700 15px/1 var(--cond);
+  letter-spacing: .12em;
+  color: var(--brass);
+}
+
+.booking-title {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.booking-body {
+  padding: 26px var(--gut) 0;
+}
+
+.booking-intro {
+  margin: 0 0 22px;
+  max-width: 44ch;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #D7CBA8;
+}
+
+/* ── 票价单：硬纸板 ─────────────────────────────── */
+
+.fare-slip {
+  background: var(--card);
+  color: var(--card-ink);
+  padding: 18px 20px;
+  margin: 0 0 22px;
+  max-width: 34em;
+  /* 硬纸板边缘：不用圆角，用一道深色压边 */
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / .16);
+}
+
+.slip-who {
+  margin: 0 0 4px;
+  font: 600 13px/1.3 var(--cond);
+  letter-spacing: .05em;
+  color: #6B5B44;
+}
+
+.slip-asks {
+  margin: 0 0 16px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.slip-sums {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  border-top: 1px solid #C0B293;
+  padding-top: 14px;
+}
+
+.slip-sums > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slip-sums dt {
+  flex: none;
+  width: 4.2em;
+  font: 600 13px/1.4 var(--cond);
+  letter-spacing: .04em;
+  color: #6B5B44;
+}
+
+.slip-sums dd {
+  margin: 0;
+  font-size: 15px;
+}
+
+.slip-paid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 该找多少：这一行是玩家的目标，给它最重的字 */
+.slip-due {
+  font-size: 21px;
+  font-weight: 700;
+}
+
+/* ── 找零托盘 ───────────────────────────────────── */
+
+.tray {
+  border: 2px dashed rgb(201 162 39 / .5);
+  padding: 16px;
+  margin: 0 0 22px;
+  max-width: 34em;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color .2s ease, background-color .2s ease;
+}
+
+/* 凑够了：虚线变实线黄铜，不用对钩也不用绿色 */
+.tray[data-state="exact"],
+.tray[data-state="done"] {
+  border-style: solid;
+  border-color: var(--brass);
+  background: rgb(201 162 39 / .08);
+}
+
+.tray-coins {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 13px;
+  flex: 1;
+}
+
+.tray-empty {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #A69B7E;
+}
+
+.tray-sum {
+  margin: 0;
+  font: 600 14px/1.4 var(--cond);
+  letter-spacing: .03em;
+  color: var(--brass);
+}
+
+/* ── 钱屉 ───────────────────────────────────────── */
+
+/*
+ * 钱屉。槽位不等宽 —— 每格由硬币自己的直径定宽，像真实钱屉的隔断那样。
+ * 等宽格子会把这一关的立论抹掉：硬币是按真实比例画的，塞进一样大的格子里，
+ * 三便士在格子中央空荡荡，克朗几乎顶满，比例反而读不出来。
+ * 按面值从小到大排成一行，直径在三便士那里的"回跌"才看得见。
+ */
+.drawer {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 22px 14px 16px;
+  margin: 0 0 20px;
+  background: var(--wood-dark);
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / .3);
+  overflow-x: auto;
+}
+
+.drawer-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  /* 硬币多宽，格子就多宽，加一点手指的余量 */
+  padding: 0 5px;
+}
+
+/* 所有硬币落在同一条搁板线上，高度按最大的克朗（39mm × 1.7 ≈ 66px）留 */
+.drawer-rest {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 66px;
+}
+
+.drawer-name {
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: center;
+  color: #C4B896;
+}
+
+/* 毫米数就摆在硬币下面：这一关的论点全在这一列数字里 */
+.drawer-mm {
+  font: 600 11px/1 var(--cond);
+  letter-spacing: .04em;
+  color: #8C8268;
+}
+
+/* ── 按钮 ───────────────────────────────────────── */
+
+.booking-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.brass,
+.plain {
+  border-radius: 2px;
+  font: 600 15px/1 var(--sans);
+  padding: 13px 18px;
+  cursor: pointer;
+}
+
+.brass {
+  border: 2px solid var(--brass);
+  background: var(--brass);
+  color: #21160A;
+}
+
+.brass:hover:not(:disabled) {
+  background: #E0B92C;
+  border-color: #E0B92C;
+}
+
+.brass:disabled {
+  background: transparent;
+  color: #8C8268;
+  border-color: #4A5A50;
+  cursor: not-allowed;
+}
+
+.plain {
+  border: 2px solid #4A5A50;
+  background: transparent;
+  color: var(--lamp);
+}
+
+.plain:hover:not(:disabled) {
+  border-color: var(--brass);
+  color: var(--brass);
+}
+
+.plain:disabled {
+  color: #6B7A70;
+  border-color: #33433A;
+  cursor: not-allowed;
+}
+
+.booking :focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+
+/* ── 找对之后 ───────────────────────────────────── */
+
+.settled {
+  border-top: 3px solid var(--brass);
+  padding-top: 18px;
+  max-width: 40em;
+}
+
+.settled-call {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--brass);
+}
+
+.settled-teach {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #D7CBA8;
+}
+
+/* ── 1971 年那一关 ──────────────────────────────── */
+
+.decimal-year {
+  margin: 0 0 12px;
+  font: 700 15px/1 var(--cond);
+  letter-spacing: .1em;
+  color: var(--brass);
+}
+
+/* 旧写法和新写法并排，中间一个问号 —— 这就是那天的问题本身 */
+.decimal-fare {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 18px 0 22px;
+  border-top: 1px solid #3C4C42;
+  border-bottom: 1px solid #3C4C42;
+  margin: 0 0 24px;
+}
+
+.decimal-old {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.decimal-eq {
+  font: 600 14px/1 var(--cond);
+  letter-spacing: .05em;
+  color: #A69B7E;
+}
+
+.decimal-new {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--brass);
+}
+
+.decimal-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 24px;
+}
+
+.decimal-pick {
+  flex: 1 1 8.5em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  border: 2px solid #4A5A50;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--lamp);
+  padding: 14px 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.decimal-pick:hover:not([aria-disabled]) {
+  border-color: var(--brass);
+}
+
+.decimal-pick[aria-disabled] {
+  cursor: default;
+}
+
+/* 法定答案：黄铜实边。其余两个说得通的暗下去，直接错的划掉 */
+.decimal-pick[data-verdict="right"] {
+  border-color: var(--brass);
+  background: rgb(201 162 39 / .12);
+}
+
+.decimal-pick[data-verdict="other"] {
+  opacity: .5;
+}
+
+.decimal-pick[data-verdict="wrong"] {
+  border-color: #8C4A42;
+  opacity: .7;
+}
+
+.pick-amount {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.pick-sub {
+  font: 600 12px/1.3 var(--cond);
+  letter-spacing: .04em;
+  color: #A69B7E;
+}
+
+.decimal-pick[data-verdict="right"] .pick-sub {
+  color: var(--brass);
+}
+
+.decimal-why {
+  border-top: 3px solid var(--brass);
+  padding-top: 18px;
+  max-width: 44em;
+}
+
+.decimal-why p {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #BDB294;
+}
+
+.decimal-why p[data-verdict="right"] {
+  color: var(--lamp);
+}
+
+.decimal-why b {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 14px;
+  color: var(--brass);
+}
+
+.decimal-check {
+  padding: 12px 14px;
+  background: var(--wood-dark);
+  font-size: 13px;
+}
+
+.decimal-closing {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+@media (max-width: 560px) {
+  .booking-title {
+    font-size: 22px;
+  }
+
+  .decimal-old,
+  .decimal-new {
+    font-size: 30px;
+  }
+
+  /* 窄屏排不下九枚，横向滑动；比例不能为了塞进屏幕而牺牲 */
+  .drawer {
+    gap: 2px;
+    padding: 18px 12px 14px;
+  }
+
+  .drawer-slot {
+    padding: 0 3px;
+  }
+
+  .booking-acts .brass,
+  .booking-acts .plain {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tray {
+    transition: none;
+  }
+}
