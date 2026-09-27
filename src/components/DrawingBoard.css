@@ -147,12 +147,15 @@
   margin: 22px;
 }
 
+/*
+ * 格子里只有那一段线。方向名移到跟随指针的浮标上：
+ * 常驻九个格子是九份重复信息，读的时候只需要一个。
+ * 用 grid 居中，线才真正落在格心 —— 原先是纵向 flex 排「线 + 文字」，
+ * 两者合起来居中，线的中心因此比格心高出一截。
+ */
 .compass-key {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
+  display: grid;
+  place-items: center;
   border: 2px solid var(--graphite);
   border-radius: 2px;
   background: transparent;
@@ -189,9 +192,36 @@
   transform: rotate(45deg);
 }
 
-.compass-name {
-  font: 600 12px/1 var(--cond);
+/*
+ * 跟着指针走的浮标。它是绘图员手边的角度尺，不是通用 tooltip：
+ * 纸色牌面、铅笔描边、零圆角，和这张图同一套材料。
+ * 只报方向和角度，偏差留给玩家自己跟真实走向比 —— 那道取整是本关要练的。
+ */
+.float {
+  position: fixed;
+  z-index: 10;
+  /* 贴着指针右侧、垂直居中，这样它读起来是挂在光标上而不是浮在附近 */
+  transform: translate(9px, -50%);
+  pointer-events: none;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 11px;
+  background: var(--paper);
+  border: 2px solid var(--graphite);
+  white-space: nowrap;
+}
+
+.float b {
+  font: 700 14px/1 var(--sans);
+  color: var(--graphite);
+}
+
+.float i {
+  font: 600 13px/1 var(--cond);
+  font-style: normal;
   letter-spacing: .04em;
+  color: var(--met);
 }
 
 /* ── 按钮 ───────────────────────────────────────── */

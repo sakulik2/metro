@@ -1,6 +1,7 @@
-import { useReducer } from 'react';
+import { useReducer, useState } from 'react';
 import {
   COMPASS,
+  DIR_ANGLE,
   DIR_NAME,
   INTRO,
   LEGS,
@@ -34,8 +35,12 @@ const PAD = 52;
  * 大胆只花在一处：死板的方格纸上，那条洋红线随玩家一段段亮起。
  * 洋红 #9B0056 是大都会线的真实色号，不是挑来装饰的。
  */
+/** 鼠标悬停时跟着走的浮标。方向名不再常驻九个格子里，读的时候才出现。 */
+type Float = { dir: Dir; x: number; y: number };
+
 export function DrawingBoard() {
   const [board, stroke] = useReducer(draw, undefined, newBoard);
+  const [float, setFloat] = useState<Float | null>(null);
 
   const done = allDrawn(board);
   const drawnPts = polyline(board);
@@ -199,7 +204,12 @@ export function DrawingBoard() {
               真实走向 {leg.bearing}°，实际距离 {leg.km} 公里
             </p>
 
-            <div className="compass" role="group" aria-label="选一个方向">
+            <div
+              className="compass"
+              role="group"
+              aria-label="选一个方向"
+              onPointerLeave={() => setFloat(null)}
+            >
               {COMPASS.map((dir, i) =>
                 dir === null ? (
                   <span key={`c${i}`} className="compass-hub" aria-hidden="true" />
@@ -209,14 +219,33 @@ export function DrawingBoard() {
                     type="button"
                     className="compass-key"
                     data-dir={dir}
-                    onClick={() => stroke({ type: 'draw', dir: dir as Dir })}
+                    aria-label={`${DIR_NAME[dir]}，${DIR_ANGLE[dir]} 度`}
+                    onClick={() => stroke({ type: 'draw', dir })}
+                    onPointerMove={(e) => setFloat({ dir, x: e.clientX, y: e.clientY })}
+                    onFocus={(e) => {
+                      // 键盘走到这里也要出浮标，落点取格子右上角
+                      const r = e.currentTarget.getBoundingClientRect();
+                      setFloat({ dir, x: r.right - 8, y: r.top + 8 });
+                    }}
+                    onBlur={() => setFloat(null)}
                   >
                     <span className="compass-arm" aria-hidden="true" />
-                    <span className="compass-name">{DIR_NAME[dir]}</span>
                   </button>
                 ),
               )}
             </div>
+
+            {/* 浮标：跟着指针走，一次只说一个方向。绘图员的角度尺 */}
+            {float && (
+              <span
+                className="float"
+                style={{ left: float.x, top: float.y }}
+                aria-hidden="true"
+              >
+                <b>{DIR_NAME[float.dir]}</b>
+                <i>{DIR_ANGLE[float.dir]}°</i>
+              </span>
+            )}
 
             {board.at > 0 && (
               <button type="button" className="pencil" onClick={() => stroke({ type: 'undo' })}>
