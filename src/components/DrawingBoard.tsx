@@ -37,8 +37,14 @@ const PAD = 52;
 /** 鼠标悬停时跟着走的浮标。方向名不再常驻九个格子里，读的时候才出现。 */
 type Float = { dir: Dir; x: number; y: number };
 
-/** set 只有测试跳关会传，见 src/dev/testRoute.ts。 */
-export function DrawingBoard({ set }: { set?: number } = {}) {
+/**
+ * set 只有测试跳关会传，见 src/dev/testRoute.ts。
+ * onDone 让站台边缘带知道玩完了没有，决定按钮说「先跳过」还是「本线走完」。
+ */
+export function DrawingBoard({
+  set,
+  onDone,
+}: { set?: number; onDone?: (done: boolean) => void } = {}) {
   /*
    * 通关次数只在挂载时读一次，一局之内定死。
    *
@@ -57,14 +63,18 @@ export function DrawingBoard({ set }: { set?: number } = {}) {
   const aid = aidFor(tier);
   const note = tierNote(tier, line);
 
-  // 全部段画完就算通关，记一次。翻不翻开代价是玩家的事，不影响这个。
+  /*
+   * 全部段画完就算通关，记一次；同时告诉外面，好让站台边缘带换文案
+   * （没画完是「先跳过」，画完是「本线走完」）。翻不翻开代价是玩家的事。
+   */
   const counted = useRef(false);
   useEffect(() => {
     if (allDrawn(board) && !counted.current) {
       counted.current = true;
       markCleared('drawing');
     }
-  }, [board]);
+    onDone?.(allDrawn(board));
+  }, [board, onDone]);
 
   /**
    * 浮标的落点算成相对罗盘，而不是相对视口。

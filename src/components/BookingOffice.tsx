@@ -32,8 +32,14 @@ import './BookingOffice.css';
  * 1863 年的售票窗口。乘客递钱，玩家从抽屉里拣零钱。
  * 最后跳到 1971 年 2 月 15 日：同一笔钱，四种都说得通的十进制答案。
  */
-/** stage 只有测试跳关会传，见 src/dev/testRoute.ts。 */
-export function BookingOffice({ stage }: { stage?: Stage } = {}) {
+/**
+ * stage 只有测试跳关会传，见 src/dev/testRoute.ts。
+ * onDone 让站台边缘带知道玩完了没有，决定按钮说「先跳过」还是「本线走完」。
+ */
+export function BookingOffice({
+  stage,
+  onDone,
+}: { stage?: Stage; onDone?: (done: boolean) => void } = {}) {
   /*
    * 通关次数只在挂载时读一次，一局之内定死。
    *
@@ -69,7 +75,9 @@ export function BookingOffice({ stage }: { stage?: Stage } = {}) {
       counted.current = true;
       markCleared('booking');
     }
-  }, [game.stage]);
+    // 走到 1971 那一幕就算这一关玩完了
+    onDone?.(game.stage === 'decimal' || game.stage === 'closed');
+  }, [game.stage, onDone]);
 
   if (!round) return null;
 

@@ -27,6 +27,8 @@ function render() {
         start={journeyFor(route.target)}
         gameStage={route.target.kind === 'game' ? route.target.stage : undefined}
         gameSet={route.target.kind === 'game' ? route.target.set : undefined}
+        /* 只有直接跳进小游戏的才回测试面板；跳到某一站的还要能正常往下走 */
+        backToTest={route.target.kind === 'game'}
       />
     ) : (
       <App />

@@ -135,6 +135,21 @@ export const missedOn = (j: Journey, line: number) =>
     .map((q, stop) => ({ q, stop }))
     .filter(({ stop }) => !isRight(j, line, stop));
 
+/**
+ * 小游戏那一屏，站台边缘带上主按钮的文案。
+ *
+ * 原来不分情况一律写「回到线路」，但它出现在两个意思完全不同的时刻：
+ * 还没玩完时按是**跳过**，玩完了按是**继续往下走**。后者读起来像退回去，
+ * 而实际上按下去是前进到换乘或终点。
+ *
+ * 所以按「玩完了没有」分两句。done 由各游戏自己的 reducer 判断并传进来 ——
+ * 不进 journey，避免多一个真相来源。
+ */
+export const gameLabel = (j: Journey, done: boolean): string => {
+  if (done) return j.line === LINES.length - 1 ? '到终点' : '本线走完';
+  return '先跳过';
+};
+
 /** 站台边缘带上主按钮的文案。动作叫什么，按钮就叫什么。 */
 export const nextLabel = (j: Journey): string => {
   if (j.phase === 'transfer') return `换乘 ${j.line + 2} 号线`;

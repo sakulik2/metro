@@ -1,9 +1,11 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { LINES, TOTAL_STOPS, gameAfter, lineTitle } from './data/lines';
+import { panelHref } from './dev/testRoute';
 import type { Stage } from './game/booking';
 import type { Journey } from './state/journey';
 import {
   answered,
+  gameLabel,
   initialJourney,
   journeyReducer,
   lineScore,
@@ -28,9 +30,21 @@ export function App({
   start,
   gameStage,
   gameSet,
-}: { start?: Journey; gameStage?: Stage; gameSet?: number } = {}) {
+  backToTest,
+}: {
+  start?: Journey;
+  gameStage?: Stage;
+  gameSet?: number;
+  /** 从 /test 跳进小游戏时为 true：退出按钮回测试面板而不是继续流程。 */
+  backToTest?: boolean;
+} = {}) {
   const [journey, dispatch] = useReducer(journeyReducer, start ?? initialJourney);
   const [showList, setShowList] = useState(false);
+  /*
+   * 当前这一关玩完了没有。由游戏自己报上来（onDone），只用来决定站台边缘带
+   * 那个按钮的文案 —— 不进 journey，那里不该多一个真相来源。
+   */
+  const [gameDone, setGameDone] = useState(false);
 
   const { line, stop, phase, tick } = journey;
   const currentLine = LINES[line];
@@ -106,10 +120,10 @@ export function App({
               )}
 
               {phase === 'game' && gameAfter(line) === 'booking' && (
-                <BookingOffice stage={gameStage} />
+                <BookingOffice stage={gameStage} onDone={setGameDone} />
               )}
               {phase === 'game' && gameAfter(line) === 'drawing' && (
-                <DrawingBoard set={gameSet} />
+                <DrawingBoard set={gameSet} onDone={setGameDone} />
               )}
 
               {phase === 'transfer' && (
@@ -137,9 +151,28 @@ export function App({
       {!showList && phase !== 'end' && (
         <PlatformEdge
           hint={phase === 'ride' && !answered(journey) ? question.hint : null}
-          nextLabel={phase === 'game' ? '回到线路' : nextLabel(journey)}
+          /*
+           * 从 /test 直接跳进某个小游戏的，退出回测试面板 —— 跳关的人想回的是
+           * 那张索引卡，不是接着走完整条线。
+           *
+           * 只作用于小游戏那一屏：跳到某一站（#/test/3-02）之后还要能正常往下
+           * 走，否则跳关就没法用来试流程了。
+           */
+          nextLabel={
+            phase === 'game'
+              ? backToTest
+                ? '回到测试入口'
+                : gameLabel(journey, gameDone)
+              : nextLabel(journey)
+          }
           nextDisabled={phase === 'ride' && !answered(journey)}
-          onNext={() => dispatch({ type: 'advance' })}
+          onNext={() => {
+            if (phase === 'game' && backToTest) {
+              window.location.href = panelHref();
+              return;
+            }
+            dispatch({ type: 'advance' });
+          }}
         />
       )}
     </>
