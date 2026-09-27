@@ -8,9 +8,10 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "check:lines": "node scripts/check-lines.mjs",
-    "check": "tsc -b --noEmit && node scripts/check-lines.mjs && node scripts/check-money.ts && node scripts/check-drawing.mjs",
+    "check": "tsc -b --noEmit && node scripts/check-lines.mjs && node scripts/check-money.ts && node scripts/check-drawing.mjs && node scripts/check-tiers.ts",
     "check:money": "node scripts/check-money.ts",
-    "check:drawing": "node scripts/check-drawing.mjs"
+    "check:drawing": "node scripts/check-drawing.mjs",
+    "check:tiers": "node scripts/check-tiers.ts"
   },
   "dependencies": {
     "react": "19.3.0",
