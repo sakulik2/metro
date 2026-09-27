@@ -26,6 +26,8 @@ const d = await import('../src/game/drawing.ts');
 const cleared = await import('../src/state/cleared.ts');
 
 const bad: string[] = [];
+/** 值得一提但不算错的。 */
+const notes: string[] = [];
 const ok = (cond: boolean, msg: string): void => {
   if (!cond) bad.push(msg);
 };
@@ -201,6 +203,37 @@ if (firstSet) {
   ok(b.set === last, `绘图 重画把 set 从 ${last} 变成了 ${b.set}，线被换掉了`);
 }
 
+/*
+ * 两条线必须真的是不同的谜题。
+ *
+ * 这是绘图板版的「同一位乘客三套金额不能相同」。如果两条线取直后的方向序列
+ * 一样，第二遍就是把同一个答案再敲一遍 —— 换了内容的名字，没换内容。
+ *
+ * 顺便说明为什么「反着画同一条线」不算新内容：四舍五入在 180° 旋转下是对称的，
+ * 反向画出来段长比、方向数、每段偏差全都一模一样。这条断言抓不住它
+ * （方向序列确实变了），但它本来就该被这条规则背后的那个道理挡掉。
+ */
+{
+  const seqs = new Map<string, number>();
+  d.LINE_SETS.forEach((set, i) => {
+    const seq = set.legs.map((l) => l.snap).join(',');
+    const prev = seqs.get(seq);
+    if (prev !== undefined) {
+      bad.push(
+        `绘图 第${prev + 1}条线和第${i + 1}条线取直方向完全相同（${seq}）` +
+          ' —— 换了名字没换谜题',
+      );
+    }
+    seqs.set(seq, i);
+  });
+
+  // 段长比也不该一样：那是揭示那一屏的立论强度
+  const ratios = d.LINE_SETS.map((s) => d.spread(s.legs).ratio);
+  if (new Set(ratios).size !== ratios.length) {
+    notes.push(`绘图 有两条线段长比相同（${ratios.join('、')}）—— 揭示会读起来一样`);
+  }
+}
+
 /* ── 通关计数 ─────────────────────────────────── */
 
 ok(cleared.tierOf(0) === 0 && cleared.tierOf(1) === 1 && cleared.tierOf(2) === 2,
@@ -216,6 +249,11 @@ assert.doesNotThrow(() => cleared.markCleared('booking'), 'markCleared 在没有
 
 /* ── 结果 ─────────────────────────────────────── */
 
+if (notes.length) {
+  console.log('可留意：');
+  for (const m of notes) console.log(`  · ${m}`);
+  console.log('');
+}
 if (bad.length) {
   console.error('重玩难度有问题：\n');
   for (const m of bad) console.error(`  · ${m}`);
