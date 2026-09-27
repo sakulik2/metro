@@ -100,6 +100,22 @@
   color: var(--body-text);
 }
 
+/*
+ * 第二遍起那句难度说明。
+ *
+ * 做成钉在窗口边上的一张纸条：黄铜左线，木色底，不是弹窗也不是徽章。
+ */
+.booking-tier {
+  margin: -6px 0 22px;
+  padding: 11px 14px;
+  border-left: 3px solid var(--accent);
+  background: var(--ground-dark);
+  max-width: 44ch;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--body-text);
+}
+
 /* ── 票价单：硬纸板 ─────────────────────────────── */
 
 .fare-slip {
@@ -164,6 +180,19 @@
 .slip-due {
   font-size: 21px;
   font-weight: 700;
+}
+
+/*
+ * 第二遍起这一行写「自己算」。
+ *
+ * 退成硬纸板上的次级字，不占那个 21px 的重量 —— 它现在是一句指令，
+ * 不是一个要记住的数。字号仍保持够大，行高不变，单子不会跳。
+ */
+.slip-blind {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: #6B5B44;
 }
 
 /* ── 找零托盘 ───────────────────────────────────── */
@@ -258,6 +287,33 @@
   font: 600 11px/1 var(--cond);
   letter-spacing: .04em;
   color: #8C8268;
+}
+
+/*
+ * 乘客退回来那句话，和按提示得到的那句。
+ *
+ * 两句都是窗口对面传过来的声音，所以放在按钮上方、托盘下方 ——
+ * 事情发生的位置。退回用信号红左线（这是个拒绝），提示用黄铜（这是帮忙）。
+ */
+.booking-reject,
+.booking-hint {
+  margin: 0 0 16px;
+  padding: 11px 14px;
+  max-width: 34em;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.booking-reject {
+  border-left: 3px solid var(--wrong-edge);
+  background: rgb(140 74 66 / .16);
+  color: var(--face);
+}
+
+.booking-hint {
+  border-left: 3px solid var(--accent);
+  background: var(--ground-dark);
+  color: var(--body-text);
 }
 
 /* ── 按钮 ───────────────────────────────────────── */

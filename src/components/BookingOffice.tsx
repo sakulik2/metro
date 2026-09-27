@@ -1,22 +1,29 @@
-import { useReducer } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import {
   DECIMAL_DAY,
   DRAWER,
   INTRO,
   ROUNDS,
+  TIER_NOTE,
   TITLE,
   YEAR,
+  aidFor,
+  canSettle,
   changeDue,
   fewestCount,
+  hintLevelOf,
+  hintText,
   isExact,
   newGame,
   play,
+  rejectionOf,
   trayGap,
   trayTotal,
   type Stage,
 } from '../game/booking';
 import { coinById, tally } from '../money/coins';
 import { format, slash } from '../money/lsd';
+import { markCleared, tierFor } from '../state/cleared';
 import { CoinFace } from './CoinFace';
 import './BookingOffice.css';
 
@@ -28,11 +35,36 @@ import './BookingOffice.css';
 export function BookingOffice({ stage }: { stage?: Stage } = {}) {
   const [game, move] = useReducer(play, stage, newGame);
 
+  /*
+   * 难度只在挂载时读一次。每次渲染都读的话，本局通关把次数 +1 之后，
+   * 提示会在玩家眼前忽然消失。
+   */
+  const [tier] = useState(() => tierFor('booking'));
+  const aid = aidFor(tier);
+  const note = TIER_NOTE[tier];
+
   const round = ROUNDS[game.round];
   const due = changeDue(game);
   const inTray = trayTotal(game);
   const gap = trayGap(game);
   const exact = isExact(game);
+  const settleable = canSettle(game, aid);
+  const hint = hintText(game, aid, hintLevelOf(game.hintsUsed));
+  const rejection = rejectionOf(game, aid);
+
+  /*
+   * 走到 1971 那一幕就算把 1863 这五位乘客做完了，记一次。
+   *
+   * 从 /test/decimal 直接进来的不算：那是跳关，没数过一枚硬币，
+   * 记上去会让难度凭空涨一档。
+   */
+  const counted = useRef(stage === 'decimal' || stage === 'closed');
+  useEffect(() => {
+    if ((game.stage === 'decimal' || game.stage === 'closed') && !counted.current) {
+      counted.current = true;
+      markCleared('booking');
+    }
+  }, [game.stage]);
 
   if (!round) return null;
 
@@ -55,6 +87,7 @@ export function BookingOffice({ stage }: { stage?: Stage } = {}) {
       {game.stage === 'brief' && (
         <div className="booking-body">
           <p className="booking-intro">{INTRO}</p>
+          {note && <p className="booking-tier">{note}</p>}
           <button type="button" className="brass" onClick={() => move({ type: 'begin' })}>
             打开窗口
           </button>
@@ -82,18 +115,34 @@ export function BookingOffice({ stage }: { stage?: Stage } = {}) {
                   <span>{format(trayTotalOf(round.paid))}</span>
                 </dd>
               </div>
+              {/* 第二遍起这一行留着位置但不给数：减法交给玩家 */}
               <div>
                 <dt>该找</dt>
-                <dd className="slip-due">{format(due)}</dd>
+                <dd className={aid.due ? 'slip-due' : 'slip-due slip-blind'}>
+                  {aid.due ? format(due) : '自己算'}
+                </dd>
               </div>
             </dl>
           </div>
 
-          {/* 找零托盘 */}
-          <div className="tray" data-state={game.stage === 'settled' ? 'done' : exact ? 'exact' : 'open'}>
+          {/*
+            找零托盘。
+            data-state 在第二遍起只在交割之后才转「正好」—— 否则托盘边框一变色
+            就等于替玩家宣布算对了，那道减法白拆。
+          */}
+          <div
+            className="tray"
+            data-state={
+              game.stage === 'settled' ? 'done' : aid.gap && exact ? 'exact' : 'open'
+            }
+          >
             <div className="tray-coins">
               {game.tray.length === 0 ? (
-                <p className="tray-empty">从下面的钱屉里点硬币，凑够 {format(due)}。</p>
+                <p className="tray-empty">
+                  {aid.due
+                    ? `从下面的钱屉里点硬币，凑够 ${format(due)}。`
+                    : '从下面的钱屉里点硬币，凑出该找的数。'}
+                </p>
               ) : (
                 tally(game.tray).map(({ coin, count }) => (
                   <CoinFace key={coin.id} coin={coin} count={count} />
@@ -104,11 +153,14 @@ export function BookingOffice({ stage }: { stage?: Stage } = {}) {
             <p className="tray-sum" aria-live="polite">
               {game.tray.length === 0
                 ? '托盘是空的'
-                : exact
-                  ? `托盘里 ${format(inTray)}，正好`
-                  : gap > 0
-                    ? `托盘里 ${format(inTray)}，多了 ${format(gap)}`
-                    : `托盘里 ${format(inTray)}，还差 ${format(-gap)}`}
+                : aid.gap
+                  ? exact
+                    ? `托盘里 ${format(inTray)}，正好`
+                    : gap > 0
+                      ? `托盘里 ${format(inTray)}，多了 ${format(gap)}`
+                      : `托盘里 ${format(inTray)}，还差 ${format(-gap)}`
+                  : /* 只报托盘里有多少，不说离目标差多少 */
+                    `托盘里 ${format(inTray)}`}
             </p>
           </div>
 
@@ -128,15 +180,43 @@ export function BookingOffice({ stage }: { stage?: Stage } = {}) {
                 ))}
               </div>
 
+              {/*
+                乘客退回来那句话，优先于提示 —— 它是刚发生的事。
+                提示只在拆了脚手架之后才有：第一遍托盘一直在报差额，
+                再加个提示按钮是多余的。
+              */}
+              {game.rejected && rejection && (
+                <p className="booking-reject" aria-live="polite">
+                  {rejection}
+                </p>
+              )}
+              {!aid.gap && !game.rejected && hint && (
+                <p className="booking-hint" aria-live="polite">
+                  {hint}
+                </p>
+              )}
+
               <div className="booking-acts">
+                {/*
+                  第二遍起不按金额禁用：按钮一亮就等于替玩家宣布算对了，
+                  和实时报差是同一种泄露。照交，由乘客数完退回来。
+                */}
                 <button
                   type="button"
                   className="brass"
-                  disabled={!exact}
-                  onClick={() => move({ type: 'settle' })}
+                  disabled={aid.gap ? !settleable : game.tray.length === 0}
+                  onClick={() => move({ type: 'settle', aid })}
                 >
                   交给乘客
                 </button>
+
+                {/* 卡住了的退路。两次到顶，按完就消失。 */}
+                {!aid.gap && game.hintsUsed < 2 && (
+                  <button type="button" className="plain" onClick={() => move({ type: 'hint' })}>
+                    {game.hintsUsed === 0 ? '算不出来' : '再说明白点'}
+                  </button>
+                )}
+
                 <button
                   type="button"
                   className="plain"
