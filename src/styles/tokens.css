@@ -1,0 +1,124 @@
+/*
+ * 设计令牌。
+ * --line 是当前线路色，由 App 在运行时写到 :root 上，所以整页主色随乘车的线路切换。
+ */
+:root {
+  --tile: #EDEFF1;   /* 站厅搪瓷砖的冷灰，页面底色 */
+  --plate: #FFFFFF;  /* 标识牌牌面 */
+  --ink: #16202B;    /* 标识墨色，正文与边框 */
+  --rail: #9AA7B2;   /* 未走过的轨道 */
+  --muted: #5A6874;  /* 次级文字 */
+  --body: #3C4A57;   /* 解释正文 */
+  --right: #0F7B4F;  /* 判对，深标识绿 */
+  --wrong: #B3261E;  /* 判错，信号红。只在选项行上出现一次 */
+
+  --line: #C6156C;   /* 当前线路色，运行时覆盖 */
+
+  --sans: "Barlow", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --cond: "Barlow Condensed", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+
+  --col: 720px;
+  --gut: 24px;
+
+  /*
+   * 页首页尾的控件统一这一个高度和字号，靠填色区分主次，不靠大小 ——
+   * 站内一块指示牌上的标牌都是齐高的。
+   */
+  --control: 40px;
+  --control-text: 15px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--tile);
+  color: var(--ink);
+  font: 400 17px/1.5 var(--sans);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--line);
+  outline-offset: 2px;
+}
+
+/*
+ * 内容栏。线路图和站台边缘带左右出血，栏内对齐。
+ *
+ * 只写左右两侧，不用 padding 简写 —— .col 常和 .sign-row / .edge-row 这类
+ * 同为单类的选择器同时挂在一个元素上，简写会把对方的上下内距整条抹掉。
+ */
+.col {
+  width: 100%;
+  max-width: var(--col);
+  margin: 0 auto;
+  padding-left: var(--gut);
+  padding-right: var(--gut);
+}
+
+/* 线路号码牌。 */
+.badge {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 3px;
+  background: var(--line);
+  color: var(--plate);
+  font: 700 22px/38px var(--sans);
+  text-align: center;
+  transition: background-color .3s ease;
+}
+
+/* 深色实心按钮，hover 转当前线路色。 */
+.solid {
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--plate);
+  font: 600 15px/1 var(--sans);
+  padding: 13px 18px;
+  cursor: pointer;
+}
+
+.solid:hover {
+  background: var(--line);
+  border-color: var(--line);
+}
+
+@media (max-width: 560px) {
+  :root {
+    --gut: 18px;
+  }
+
+  body {
+    font-size: 16px;
+  }
+
+  .badge {
+    width: 32px;
+    height: 32px;
+    font-size: 19px;
+    line-height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge {
+    transition: none;
+  }
+}
