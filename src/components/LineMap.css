@@ -1,0 +1,142 @@
+/*
+ * 线路图。这是整个设计唯一大胆的地方，其余部分都按站内标识的克制来做。
+ * --n 是本线站数，--filled 是已走过的比例，由组件写在 .map-inner 上。
+ */
+
+.map {
+  border-bottom: 2px solid var(--ink);
+  padding: 22px 0;
+}
+
+.map-tag {
+  margin: 0 0 18px;
+  font: 600 15px/1 var(--cond);
+  letter-spacing: .04em;
+  color: var(--line);
+  transition: color .3s ease;
+}
+
+.map-frame {
+  display: flex;
+  align-items: flex-start;
+}
+
+.map-inner {
+  position: relative;
+  flex: 1;
+}
+
+/* 轨道从第一个站点的圆心起，到最后一个站点的圆心止。 */
+.map-rail,
+.map-done {
+  position: absolute;
+  top: 8px;
+  height: 5px;
+  left: calc(50% / var(--n));
+}
+
+.map-rail {
+  right: calc(50% / var(--n));
+  background: var(--rail);
+}
+
+.map-done {
+  width: calc((100% - (100% / var(--n))) * var(--filled));
+  background: var(--line);
+  transition: width .42s cubic-bezier(.22, .7, .28, 1), background-color .3s ease;
+}
+
+.map-stops {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  position: relative;
+}
+
+.map-stop {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.map-node {
+  display: block;
+  width: 21px;
+  height: 21px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 5px solid var(--rail);
+  background: var(--tile);
+  transform: scale(.62);
+  transition: transform .2s ease, background-color .2s ease, border-color .2s ease;
+}
+
+/* 当前站：墨色描边加一道套环，站在图上一眼能找到。 */
+.map-stop[aria-current="step"] .map-node {
+  transform: scale(1);
+  box-shadow: 0 0 0 4px var(--tile), 0 0 0 6px var(--ink);
+}
+
+.map-stop[aria-current="step"]:not([data-mark]) .map-node {
+  border-color: var(--ink);
+}
+
+/* 答对填实，答错留空心环——记录事实，不羞辱人。线路图上不用红绿。 */
+.map-stop[data-mark="right"] .map-node {
+  border-color: var(--line);
+  background: var(--line);
+  transform: scale(1);
+}
+
+.map-stop[data-mark="wrong"] .map-node {
+  border-color: var(--line);
+  background: var(--plate);
+  transform: scale(1);
+}
+
+.map-label {
+  display: block;
+  margin-top: 13px;
+  font: 600 14px/1.2 var(--cond);
+  letter-spacing: .01em;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-stop[data-mark] .map-label,
+.map-stop[aria-current="step"] .map-label {
+  color: var(--ink);
+}
+
+/* 方向箭头只出现在终点，那里它真的表示方向。 */
+.map-arrow {
+  flex: none;
+  margin: 4px 0 0 8px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 7px 0 7px 11px;
+  border-color: transparent transparent transparent var(--rail);
+}
+
+.map-arrow[data-end="true"] {
+  border-left-color: var(--line);
+}
+
+@media (max-width: 560px) {
+  .map-label {
+    font-size: 12px;
+    margin-top: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-tag,
+  .map-done,
+  .map-node {
+    transition: none;
+  }
+}
