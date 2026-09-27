@@ -1,4 +1,4 @@
-import { useReducer, useState } from 'react';
+import { useReducer, useRef, useState } from 'react';
 import {
   COMPASS,
   DIR_ANGLE,
@@ -41,6 +41,18 @@ type Float = { dir: Dir; x: number; y: number };
 export function DrawingBoard() {
   const [board, stroke] = useReducer(draw, undefined, newBoard);
   const [float, setFloat] = useState<Float | null>(null);
+  const compassRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * 浮标的落点算成相对罗盘，而不是相对视口。
+   * position:fixed 会被任何带 transform 的祖先劫持成相对那个祖先 ——
+   * .car 上的进站动画正是这样一个祖先，所以 fixed 那版偏了一整段。
+   */
+  const follow = (dir: Dir, clientX: number, clientY: number) => {
+    const box = compassRef.current?.getBoundingClientRect();
+    if (!box) return;
+    setFloat({ dir, x: clientX - box.left, y: clientY - box.top });
+  };
 
   const done = allDrawn(board);
   const drawnPts = polyline(board);
@@ -205,6 +217,7 @@ export function DrawingBoard() {
             </p>
 
             <div
+              ref={compassRef}
               className="compass"
               role="group"
               aria-label="选一个方向"
@@ -221,11 +234,11 @@ export function DrawingBoard() {
                     data-dir={dir}
                     aria-label={`${DIR_NAME[dir]}，${DIR_ANGLE[dir]} 度`}
                     onClick={() => stroke({ type: 'draw', dir })}
-                    onPointerMove={(e) => setFloat({ dir, x: e.clientX, y: e.clientY })}
+                    onPointerMove={(e) => follow(dir, e.clientX, e.clientY)}
                     onFocus={(e) => {
                       // 键盘走到这里也要出浮标，落点取格子右上角
                       const r = e.currentTarget.getBoundingClientRect();
-                      setFloat({ dir, x: r.right - 8, y: r.top + 8 });
+                      follow(dir, r.right - 8, r.top + 8);
                     }}
                     onBlur={() => setFloat(null)}
                   >
@@ -233,19 +246,22 @@ export function DrawingBoard() {
                   </button>
                 ),
               )}
-            </div>
 
-            {/* 浮标：跟着指针走，一次只说一个方向。绘图员的角度尺 */}
-            {float && (
-              <span
-                className="float"
-                style={{ left: float.x, top: float.y }}
-                aria-hidden="true"
-              >
-                <b>{DIR_NAME[float.dir]}</b>
-                <i>{DIR_ANGLE[float.dir]}°</i>
-              </span>
-            )}
+              {/*
+                浮标必须在罗盘里面：它是相对罗盘定位的，放到外面就会去找别的
+                祖先当原点，从而飘到页面另一头。
+              */}
+              {float && (
+                <span
+                  className="float"
+                  style={{ left: float.x, top: float.y }}
+                  aria-hidden="true"
+                >
+                  <b>{DIR_NAME[float.dir]}</b>
+                  <i>{DIR_ANGLE[float.dir]}°</i>
+                </span>
+              )}
+            </div>
 
             {board.at > 0 && (
               <button type="button" className="pencil" onClick={() => stroke({ type: 'undo' })}>

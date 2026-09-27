@@ -139,6 +139,8 @@
   grid-template-rows: repeat(3, 84px);
   gap: 5px;
   margin: 0 0 20px;
+  /* 浮标以它为原点 */
+  position: relative;
 }
 
 .compass-hub {
@@ -198,9 +200,13 @@
  * 只报方向和角度，偏差留给玩家自己跟真实走向比 —— 那道取整是本关要练的。
  */
 .float {
-  position: fixed;
+  /*
+   * 相对罗盘定位，不用 fixed：任何带 transform 的祖先都会把 fixed 劫持成
+   * 相对它自己，而 .car 上的进站动画正是这样一个祖先。
+   */
+  position: absolute;
   z-index: 10;
-  /* 贴着指针右侧、垂直居中，这样它读起来是挂在光标上而不是浮在附近 */
+  /* 贴着指针右侧、垂直居中，读起来是挂在光标上而不是浮在附近 */
   transform: translate(9px, -50%);
   pointer-events: none;
   display: flex;
