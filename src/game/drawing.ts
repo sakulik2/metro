@@ -109,35 +109,53 @@ export type Board = {
   at: number;
   /** 画完之后才翻开代价那一页。 */
   revealed: boolean;
+  /**
+   * 当前这一段按过几次提示。画下一段就归零 ——
+   * 一段想不通不该让整条线都降难度。
+   */
+  hintsUsed: number;
 };
 
 export const newBoard = (): Board => ({
   drawn: LEGS.map(() => null),
   at: 0,
   revealed: false,
+  hintsUsed: 0,
 });
 
 export type Stroke =
   | { type: 'draw'; dir: Dir }
   | { type: 'undo' }
+  | { type: 'hint' }
   | { type: 'reveal' }
   | { type: 'restart' };
 
 export function draw(board: Board, stroke: Stroke): Board {
   switch (stroke.type) {
+    /* 画下一段，提示次数归零 */
     case 'draw': {
       if (board.at >= LEGS.length) return board;
       const drawn = board.drawn.slice();
       drawn[board.at] = stroke.dir;
-      return { ...board, drawn, at: board.at + 1 };
+      return { ...board, drawn, at: board.at + 1, hintsUsed: 0 };
     }
 
+    /*
+     * 擦掉上一段。提示次数也归零 —— 擦回去是重新考虑那一段，
+     * 不该把刚才要来的提示一直挂在那里。
+     */
     case 'undo': {
       if (board.at === 0) return board;
       const drawn = board.drawn.slice();
       drawn[board.at - 1] = null;
-      return { ...board, drawn, at: board.at - 1 };
+      return { ...board, drawn, at: board.at - 1, hintsUsed: 0 };
     }
+
+    /* 要提示。两次到顶。 */
+    case 'hint':
+      return board.at < LEGS.length && board.hintsUsed < 2
+        ? { ...board, hintsUsed: board.hintsUsed + 1 }
+        : board;
 
     case 'reveal':
       return board.at >= LEGS.length ? { ...board, revealed: true } : board;
@@ -217,6 +235,63 @@ export function idealPolyline(): { x: number; y: number }[] {
     pts.push({ x, y });
   }
   return pts;
+}
+
+/* ── 第二遍开始拆脚手架 ─────────────────────────── */
+
+/**
+ * 每一档拿掉什么。
+ *
+ * 0  真实走向的度数 + 地理实况淡影线   —— 第一遍：照着读数取整
+ * 1  只有淡影线                        —— 自己看影线判断
+ * 2  什么都没有，只剩站名              —— 凭记忆和伦敦地理
+ *
+ * 拿掉的只有提示，正解始终是同一个（由坐标算出来的 snap），
+ * 所以 check:drawing 不受影响，史实也没有被动过。
+ */
+export type Aid = {
+  /** 显示「真实走向 122.3°，实际距离 1.2 公里」这一行。 */
+  bearing: boolean;
+  /** 纸上摊着地理实况那条淡影线。 */
+  ghost: boolean;
+};
+
+export const aidFor = (tier: 0 | 1 | 2): Aid => ({
+  bearing: tier === 0,
+  ghost: tier < 2,
+});
+
+/** 这一档在界面上怎么说。第一遍不提，免得把「还有更难的」变成噪音。 */
+export const TIER_NOTE: Record<0 | 1 | 2, string | null> = {
+  0: null,
+  1: '第二遍：不给真实走向了。纸上那条淡影线就是地理实况，自己看着取直。',
+  2: '第三遍：影线也收走了。只剩七个站名 —— 贝克画图时靠的也不是随手可查的坐标。',
+};
+
+/**
+ * 卡住了怎么办。
+ *
+ * 这一关本来就不会真卡死 —— 八个方向随便点都能往下走，画完自然看到对错。
+ * 但「随便点」不是玩法，所以给一条明确的退路：当前这一段可以要提示，
+ * 分两步，和售票窗口同一套节奏。
+ *
+ *   1 次  把这一段的真实走向读数还给你（即第一遍那行）
+ *   2 次  直接说该往哪个方向
+ *
+ * 只作用于当前段，下一段重新计数：一段想不通，不该让整条线都降难度。
+ */
+export type HintLevel = 0 | 1 | 2;
+
+export const hintLevelOf = (used: number): HintLevel =>
+  used >= 2 ? 2 : used >= 1 ? 1 : 0;
+
+/** 提示说什么。level 0 不显示。 */
+export function hintText(leg: Leg, level: HintLevel): string | null {
+  if (level === 0) return null;
+  if (level === 1) {
+    return `这一段真实走向 ${leg.bearing}°，实际距离 ${leg.km} 公里。八个方向里哪个最近？`;
+  }
+  return `最接近的是${DIR_NAME[leg.snap]}（${DIR_ANGLE[leg.snap]}°），偏 ${Math.abs(leg.offBy)}°。`;
 }
 
 /** 最短和最长段的倍数关系，揭示环节要用。 */

@@ -72,6 +72,22 @@
   line-height: 1.6;
 }
 
+/*
+ * 第二遍开始的那句提示。
+ *
+ * 用页边批注的样子：绘图员在图纸边上写给自己的一行字，不是弹窗也不是徽章。
+ * 洋红左线已经给了规则，这里只用一道铅笔虚线，免得和规则抢。
+ */
+.board-tier {
+  margin: -8px 0 24px;
+  padding: 10px 13px;
+  border: 1px dashed var(--note);
+  max-width: 46ch;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--note);
+}
+
 /* ── 方格纸 ─────────────────────────────────────── */
 
 .sheet {
@@ -127,6 +143,19 @@
   font: 600 14px/1.5 var(--cond);
   letter-spacing: .03em;
   color: var(--met);
+}
+
+/*
+ * 第二遍起替掉上面那行读数。
+ *
+ * 占同样的位置和行高，所以罗盘不会因为少了一行往上跳；颜色退到批注灰，
+ * 因为它不是信息，只是说明信息被拿走了。
+ */
+.draw-blind {
+  margin: 0 0 20px;
+  font: 600 14px/1.5 var(--cond);
+  letter-spacing: .03em;
+  color: var(--note);
 }
 
 /*
@@ -230,7 +259,30 @@
   color: var(--met);
 }
 
+/*
+ * 按提示得到的那句，替掉读数那一行的位置。
+ *
+ * 用洋红左线而不是批注灰：这是要来的信息，和第一遍那行读数同等地位，
+ * 不该看起来像退而求其次。
+ */
+.draw-hint {
+  margin: 0 0 20px;
+  padding: 10px 13px;
+  border-left: 3px solid var(--met);
+  background: #DDE2D8;
+  max-width: 44ch;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 /* ── 按钮 ───────────────────────────────────────── */
+
+/* 擦掉上一段和要提示并排 */
+.draw-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
 .ink-btn,
 .pencil {

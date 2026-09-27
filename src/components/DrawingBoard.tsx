@@ -1,4 +1,4 @@
-import { useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import {
   COMPASS,
   DIR_ANGLE,
@@ -9,10 +9,14 @@ import {
   RULE,
   STATIONS,
   TASK,
+  TIER_NOTE,
   TITLE,
   WHO,
   YEAR,
+  aidFor,
   allDrawn,
+  hintLevelOf,
+  hintText,
   draw,
   geoPolyline,
   idealPolyline,
@@ -23,6 +27,7 @@ import {
   verdictOf,
   type Dir,
 } from '../game/drawing';
+import { markCleared, tierFor } from '../state/cleared';
 import './DrawingBoard.css';
 
 /** 网格一格多少像素，以及画布四周留白。 */
@@ -42,6 +47,23 @@ export function DrawingBoard() {
   const [board, stroke] = useReducer(draw, undefined, newBoard);
   const [float, setFloat] = useState<Float | null>(null);
   const compassRef = useRef<HTMLDivElement>(null);
+
+  /*
+   * 难度只在挂载时读一次。读成 state 而不是每次渲染都读，是因为本局中途
+   * 通关会把次数 +1，那时如果重算，提示会在玩家眼前忽然消失。
+   */
+  const [tier] = useState(() => tierFor('drawing'));
+  const aid = aidFor(tier);
+  const note = TIER_NOTE[tier];
+
+  // 七段都画完就算通关，记一次。翻不翻开代价是玩家的事，不影响这个。
+  const counted = useRef(false);
+  useEffect(() => {
+    if (allDrawn(board) && !counted.current) {
+      counted.current = true;
+      markCleared('drawing');
+    }
+  }, [board]);
 
   /**
    * 浮标的落点算成相对罗盘，而不是相对视口。
@@ -73,6 +95,7 @@ export function DrawingBoard() {
 
   const leg = LEGS[board.at];
   const { min, max, ratio } = spread();
+  const hint = leg ? hintText(leg, hintLevelOf(board.hintsUsed)) : null;
 
   return (
     <section className="board">
@@ -87,6 +110,7 @@ export function DrawingBoard() {
           <>
             <p className="board-intro">{INTRO}</p>
             <p className="board-rule">{RULE}</p>
+            {note && <p className="board-tier">{note}</p>}
           </>
         )}
 
@@ -113,7 +137,7 @@ export function DrawingBoard() {
             <rect width={w} height={h} fill="url(#grid)" />
 
             {/* 地理实况：一开始就摊在纸上，贝克做的是把它取直，不是凭空画 */}
-            {geoPts.length > 1 && (
+            {aid.ghost && geoPts.length > 1 && (
               <polyline
                 points={geoPts.map((p) => `${px(p.x)},${py(p.y)}`).join(' ')}
                 fill="none"
@@ -125,7 +149,7 @@ export function DrawingBoard() {
             )}
 
             {/* 地理实况上的站位，小空心点 */}
-            {geoPts.map((p, i) => (
+            {aid.ghost && geoPts.map((p, i) => (
               <circle
                 key={`geo-${STATIONS[i]?.name ?? i}`}
                 cx={px(p.x)}
@@ -212,9 +236,18 @@ export function DrawingBoard() {
             <p className="draw-leg">
               第 {board.at + 1} 段　{leg.from} → {leg.to}
             </p>
-            <p className="draw-true">
-              真实走向 {leg.bearing}°，实际距离 {leg.km} 公里
-            </p>
+            {aid.bearing ? (
+              <p className="draw-true">
+                真实走向 {leg.bearing}°，实际距离 {leg.km} 公里
+              </p>
+            ) : hint ? (
+              /* 要过提示：把读数还给他，或直接说方向 */
+              <p className="draw-hint" aria-live="polite">
+                {hint}
+              </p>
+            ) : (
+              <p className="draw-blind">这一段的真实走向没有给你 —— 自己判断。</p>
+            )}
 
             <div
               ref={compassRef}
@@ -263,11 +296,23 @@ export function DrawingBoard() {
               )}
             </div>
 
-            {board.at > 0 && (
-              <button type="button" className="pencil" onClick={() => stroke({ type: 'undo' })}>
-                擦掉上一段
-              </button>
-            )}
+            <div className="draw-acts">
+              {board.at > 0 && (
+                <button type="button" className="pencil" onClick={() => stroke({ type: 'undo' })}>
+                  擦掉上一段
+                </button>
+              )}
+
+              {/*
+                卡住了的退路，只在拆了读数之后才有：
+                第一遍那行读数一直摊着，再给提示按钮是多余的。
+              */}
+              {!aid.bearing && board.hintsUsed < 2 && (
+                <button type="button" className="pencil" onClick={() => stroke({ type: 'hint' })}>
+                  {board.hintsUsed === 0 ? '看不出来' : '直接告诉我'}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
