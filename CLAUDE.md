@@ -67,6 +67,17 @@ These exist because each one caught a real bug. They are the closest thing this 
 - **`check:money`** — 36 assertions taken from `predecimal`'s own tests and the text of the Decimal Currency Act 1969. If the money is wrong the booking office has no point.
 - **`check:drawing`** — recomputes bearings/distances from coordinates, refuses a self-crossing polyline, and fails if the longest leg is under 1.5× the shortest, since then the level has nothing to reveal.
 
+## CI (decided, not built)
+
+When CI happens it will be **GitHub Actions building to GitHub Pages, using npm** — npm specifically for CI, even though local work is package-manager-free. No workflow file exists yet; don't add one until asked.
+
+Two things that will bite whoever writes it:
+
+- **`npm ci` will fail** — there is no committed lockfile (see Commands). Use `npm install`.
+- **Pages serves from a subpath**, so `vite.config.ts` needs `base: '/<repo>/'` or every asset 404s. It is currently unset, which is correct for local dev and wrong for Pages.
+
+`npm run check` is the gate worth running in CI: it covers types and all three validators.
+
 ## Conventions
 
 **Commits in English, Conventional Commits form** (`feat(money):`, `fix:`, `docs:`…). Code comments and UI copy are Chinese. Commit in logical batches, not one lump.
