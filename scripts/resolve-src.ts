@@ -33,8 +33,16 @@ registerHooks({
     try {
       return next(specifier, context);
     } catch (err) {
-      // 只管相对路径的「找不到」，别的错误照原样抛出去
-      if ((err as { code?: string }).code !== 'ERR_MODULE_NOT_FOUND') throw err;
+      /*
+       * 两种情况都要补，而且第二种不明显：
+       *
+       *   ERR_MODULE_NOT_FOUND     —— 没有同名文件，最常见
+       *   ERR_UNSUPPORTED_DIR_IMPORT —— 有个同名**目录**。src/data/lines 就是
+       *     这样：既有 lines.ts 又有 lines/ 目录，Node 先看见目录就换了错误码，
+       *     只判前一种会漏掉它。
+       */
+      const code = (err as { code?: string }).code;
+      if (code !== 'ERR_MODULE_NOT_FOUND' && code !== 'ERR_UNSUPPORTED_DIR_IMPORT') throw err;
       if (!specifier.startsWith('.')) throw err;
 
       for (const ext of TRIES) {
