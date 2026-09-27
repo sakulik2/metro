@@ -1,15 +1,16 @@
 /*
- * 1863 年的售票窗口。
+ * 售票窗口。这一关跨一百零八年，所以有两套配色，靠 data-era 切换 ——
+ * 槽位名字取中性的角色名（ground/accent/slip/face），不叫「木头」「黄铜」，
+ * 否则 1971 那一套装进来就是个谎。
  *
- * 这一关刻意不用测验那套现代站内标识的冷灰：那是 1970 年代以后的视觉语言。
- * 窗口是煤气灯下的木格子 —— 暗绿漆木、黄铜格栅、硬纸板票价单。
- * 大胆只花在硬币上：它们按真实直径画，其余一切退到背景里。
+ * 1863：煤气灯下的木格子。暗绿漆木、黄铜格栅、硬纸板票价单。
+ * 1971：British Rail 1965 年企业形象那一套。铁路蓝车身、珠灰窗带、警示黄。
  *
- * 槽位名字取中性的角色名（ground/accent/slip/face），不叫「木头」「黄铜」：
- * 这一关之后还要装进别的年代，叫死材料名到那时就是个谎。
+ * 两边都只把大胆花在一处：1863 在硬币的真实直径上，1971 在那条珠灰窗带上。
  */
 
 .booking {
+  /* 1863 —— 默认这一套 */
   --ground: #23352C;      /* 漆木隔板，煤气灯下的暗绿 */
   --ground-dark: #16211B;
   --accent: #C9A227;      /* 黄铜格栅与铜牌 */
@@ -19,7 +20,7 @@
   --rule: #3C4C42;        /* 分隔线 */
   --dim: #A69B7E;         /* 次级文字 */
   --body-text: #D7CBA8;
-  --body-dim: #BDB294;    /* 比 body-text 再退一档 */
+  --body-dim: #BDB294;    /* 比 body-text 再退一档：1971 那屏三段落选的解释 */
   --wrong-edge: #8C4A42;
   --edge: #4A5A50;        /* 次级按钮和未选中卡片的描边 */
   --on-accent: #21160A;   /* 压在 accent 填色上的字 */
@@ -34,6 +35,35 @@
   border-bottom: 4px solid var(--ink);
   padding: 0 0 34px;
   margin: 0 0 34px;
+}
+
+/*
+ * 1971 —— British Rail。
+ *
+ * 色号取 1965 年那套企业形象：铁路蓝 BS 381C 114、警示黄 BS 381C 356、
+ * 信号红 BS 381C 537。珠灰是车身窗带那个灰。
+ *
+ * 字仍是 Barlow：Rail Alphabet 是专门做的字，手上没有，不假装有。
+ * Barlow 的骨架同样来自交通标识用的哥特体，这是诚实的近似。
+ */
+.booking[data-era="1971"] {
+  --ground: #1F4B61;      /* 铁路蓝 BS 381C 114 */
+  --ground-dark: #16394A;
+  --accent: #FCC808;      /* 警示黄 BS 381C 356，车头那块黄 */
+  --slip: #E3E4DF;        /* 珠灰，车身窗带 */
+  --slip-ink: #16394A;
+  --face: #E3E4DF;
+  --rule: #3A6A80;
+  --dim: #A8C3CF;
+  --body-text: #CFDDE4;
+  --body-dim: #A8BEC9;
+  --wrong-edge: #DD3420;  /* 信号红 BS 381C 537 */
+  --edge: #4E7E96;
+  --on-accent: #16394A;
+  --accent-lift: #FFD83A;
+  --accent-soft: rgb(252 200 8 / .14);
+  --accent-dash: rgb(252 200 8 / .55);
+  --accent-wash: rgb(252 200 8 / .1);
 }
 
 .booking-head {
@@ -477,3 +507,90 @@
   }
 }
 
+/* ── 1971：British Rail ─────────────────────────── */
+
+/*
+ * 车身窗带。BR 的蓝灰涂装里，珠灰是一条水平带，上下留蓝，
+ * 白细线勾边 —— 手册里写的是"沿主车窗垂直居中"。
+ * 这一关把它当抬头的底：站名压在灰带上，蓝在上下包住。
+ */
+.booking[data-era="1971"] .booking-head {
+  background: var(--ground);
+  border-bottom: 0;
+  padding: 0;
+}
+
+.br-band {
+  background: var(--slip);
+  color: var(--slip-ink);
+  /* 白细线勾边，就是涂装上那两道 */
+  border-top: 2px solid #FFF;
+  border-bottom: 2px solid #FFF;
+  margin: 18px 0;
+  padding: 15px var(--gut);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/*
+ * 双箭头。1965 年 Gerald Barney 画的那个记号，两道反向箭头夹一条轴。
+ * 这里用 SVG 画一个几何近似，不冒充原图 —— 它是这一屏的年代坐标，
+ * 和左上角那个年份一样，先读到它就知道自己在哪一年。
+ */
+.br-arrow {
+  flex: none;
+  width: 58px;
+  height: 25px;
+  color: var(--slip-ink);
+}
+
+.br-where {
+  min-width: 0;
+}
+
+.br-station {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.br-renamed {
+  margin: 3px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #5A6874;
+}
+
+/* 年份牌：警示黄，车头那块黄的用法 —— 一小块，撞在蓝上 */
+.booking[data-era="1971"] .decimal-year {
+  display: inline-block;
+  margin: 0 0 16px;
+  padding: 5px 10px;
+  background: var(--accent);
+  color: var(--on-accent);
+  letter-spacing: .1em;
+}
+
+/* 1971 的 1863 回望：旧写法用珠灰，新写法用警示黄 */
+.booking[data-era="1971"] .decimal-old {
+  color: var(--slip);
+}
+
+@media (max-width: 560px) {
+  .br-band {
+    gap: 11px;
+    padding: 13px var(--gut);
+  }
+
+  .br-arrow {
+    width: 46px;
+    height: 20px;
+  }
+
+  .br-station {
+    font-size: 18px;
+  }
+}

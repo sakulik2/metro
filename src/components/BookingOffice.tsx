@@ -13,6 +13,7 @@ import {
   play,
   trayGap,
   trayTotal,
+  type Stage,
 } from '../game/booking';
 import { coinById, tally } from '../money/coins';
 import { format, formatNewPence, slash, toStatutoryNewPence } from '../money/lsd';
@@ -23,8 +24,9 @@ import './BookingOffice.css';
  * 1863 年的售票窗口。乘客递钱，玩家从抽屉里拣零钱。
  * 最后跳到 1971 年 2 月 15 日：同一笔钱，四种都说得通的十进制答案。
  */
-export function BookingOffice() {
-  const [game, move] = useReducer(play, undefined, newGame);
+/** stage 只有测试跳关会传，见 src/dev/testRoute.ts。 */
+export function BookingOffice({ stage }: { stage?: Stage } = {}) {
+  const [game, move] = useReducer(play, stage, newGame);
 
   const round = ROUNDS[game.round];
   const due = changeDue(game);
@@ -34,11 +36,20 @@ export function BookingOffice() {
 
   if (!round) return null;
 
+  // 1971 那两幕换一整套配色，见 BookingOffice.css 里的 data-era。
+  const era = game.stage === 'decimal' || game.stage === 'closed' ? '1971' : '1863';
+
   return (
-    <section className="booking">
+    <section className="booking" data-era={era}>
       <div className="booking-head">
-        <p className="booking-year">{YEAR}</p>
-        <h2 className="booking-title">{TITLE}</h2>
+        {era === '1971' ? (
+          <BrBand />
+        ) : (
+          <>
+            <p className="booking-year">{YEAR}</p>
+            <h2 className="booking-title">{TITLE}</h2>
+          </>
+        )}
       </div>
 
       {game.stage === 'brief' && (
@@ -221,6 +232,47 @@ export function BookingOffice() {
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * 1971 年的抬头：一条珠灰车身窗带，双箭头 + 站名压在上面。
+ *
+ * 站名到这一年已经不是 Farringdon Street 了 —— 1922 年随新站房改叫
+ * Farringdon & High Holborn，1936 年定为 Farringdon。同一个窗口，第三个名字。
+ */
+function BrBand() {
+  return (
+    <div className="br-band">
+      <svg
+        className="br-arrow"
+        viewBox="0 0 64 28"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4.6"
+        strokeLinecap="butt"
+        strokeLinejoin="miter"
+        role="img"
+        aria-label="British Rail"
+      >
+        {/*
+          1965 年那个双箭头的几何近似。
+          要紧的是两道斜线平行 —— 平行才读成双向的轨，交叉就成了别的记号。
+          下面那支是上面那支绕画布中心 (32,14) 转 180° 得来的，所以必然平行。
+          箭头做到斜线三倍粗：再窄就和杆糊成一根，读不出是箭。
+        */}
+        {/* 上行：自左下斜上，转平，向右出头 */}
+        <path d="M6 23.5 L20 9.5 H45" />
+        <path d="M44 2.5 L62 9.5 L44 16.5 Z" fill="currentColor" stroke="none" />
+        {/* 下行：上面那支转 180° */}
+        <path d="M58 4.5 L44 18.5 H19" />
+        <path d="M20 11.5 L2 18.5 L20 25.5 Z" fill="currentColor" stroke="none" />
+      </svg>
+      <div className="br-where">
+        <p className="br-station">{DECIMAL_DAY.station}</p>
+        <p className="br-renamed">{DECIMAL_DAY.renamed}</p>
+      </div>
+    </div>
   );
 }
 
