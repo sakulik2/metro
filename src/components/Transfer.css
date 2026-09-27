@@ -1,0 +1,109 @@
+/* 换乘页：本线走完，报分、列出漏掉的站，然后指向下一条线。 */
+
+.xfer-done {
+  margin: 0 0 4px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+/* 换乘时焦点落在这里，让读屏读出结果；但不画焦点环。 */
+.xfer-done:focus {
+  outline: none;
+}
+
+.xfer-sub {
+  margin: 0 0 26px;
+  font-size: 16px;
+  color: var(--body);
+}
+
+.xfer-all {
+  margin: 0 0 26px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--right);
+}
+
+.xfer-miss {
+  margin: 0 0 26px;
+  padding: 0;
+  list-style: none;
+  max-width: 38em;
+}
+
+.xfer-miss li {
+  display: flex;
+  gap: 11px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-top: 1px solid var(--rail);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.xfer-miss li:last-child {
+  border-bottom: 1px solid var(--rail);
+}
+
+.xfer-miss b {
+  flex: none;
+  width: 4em;
+  font: 600 14px/1.4 var(--cond);
+  letter-spacing: .02em;
+  color: var(--wrong);
+}
+
+.xfer-rule {
+  border: 0;
+  border-top: 2px solid var(--ink);
+  margin: 0 0 20px;
+  max-width: 38em;
+}
+
+.xfer-next {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  max-width: 38em;
+}
+
+/* 下一条线的号码牌，用那条线自己的颜色。 */
+.badge-sm {
+  width: 26px;
+  height: 26px;
+  font: 700 15px/26px var(--sans);
+}
+
+.xfer-to {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.xfer-to small {
+  display: block;
+  margin-top: 3px;
+  font: 600 13px/1 var(--cond);
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .xfer-done {
+    font-size: 26px;
+  }
+
+  .xfer-to {
+    font-size: 19px;
+  }
+
+  .badge-sm {
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+    line-height: 26px;
+  }
+}
