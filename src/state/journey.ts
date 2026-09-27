@@ -17,7 +17,8 @@ export type Journey = {
 export type Action =
   | { type: 'choose'; option: number }
   | { type: 'advance' }
-  | { type: 'restart' };
+  | { type: 'restart' }
+  | { type: 'jump'; to: Journey };
 
 const emptyPicks = (): Picks => LINES.map((l) => l.questions.map(() => null));
 
@@ -88,6 +89,10 @@ export function journeyReducer(state: Journey, action: Action): Journey {
 
     case 'restart':
       return { ...initialJourney, picks: emptyPicks(), tick: state.tick + 1 };
+
+    // 测试跳关用，见 src/dev/testRoute.ts
+    case 'jump':
+      return { ...action.to, tick: state.tick + 1 };
   }
 }
 
