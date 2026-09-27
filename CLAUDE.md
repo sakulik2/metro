@@ -8,7 +8,9 @@ A Chinese-language quiz about the London Underground: 20 questions split across 
 
 ## Commands
 
-Any package manager works — npm, yarn, pnpm and bun have all been run against these scripts. No lockfile is committed, and all of them are gitignored, so install with whichever you have and don't add one back.
+Any package manager works — npm, yarn, pnpm and bun have all been run against these scripts. `package-lock.json` is committed because the transitive dependencies carry ranges (vite asks for `postcss ^8.5.28`, react-dom for `scheduler ^0.28.0`), so without it a fresh clone builds against an untested tree. yarn and bun just ignore it and install anyway; their own lockfiles are gitignored so two locks can't diverge.
+
+Regenerate it from a clean install (`rm -rf node_modules package-lock.json && npm install`), not with `--package-lock-only` — the latter leaves entries without integrity hashes, which locks versions but not contents.
 
 ```bash
 npm install            # or yarn / pnpm install / bun install
@@ -73,7 +75,7 @@ When CI happens it will be **GitHub Actions building to GitHub Pages, using npm*
 
 Two things that will bite whoever writes it:
 
-- **`npm ci` will fail** — there is no committed lockfile (see Commands). Use `npm install`.
+- **Use `npm ci`, not `npm install`** — the lockfile is committed, and `ci` installs exactly what it says and fails loudly if `package.json` has drifted out of sync with it.
 - **Pages serves from a subpath**, so `vite.config.ts` needs `base: '/<repo>/'` or every asset 404s. It is currently unset, which is correct for local dev and wrong for Pages.
 
 `npm run check` is the gate worth running in CI: it covers types and all three validators.
