@@ -1,0 +1,117 @@
+/*
+ * 站台边缘带：页脚一条线路色实带，承载提示和主按钮。
+ * 换线时整条带子跟着换色。
+ */
+
+.edge {
+  background: var(--line);
+  color: var(--plate);
+  border-top: 4px solid var(--ink);
+  transition: background-color .3s ease;
+}
+
+.edge-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  /* 站台边缘带承载主按钮，给它比页首更宽的余量 */
+  padding: 24px 0;
+}
+
+/* 带子上是线路色，焦点环改用墨色才看得见。 */
+.edge :focus-visible {
+  outline-color: var(--ink);
+}
+
+.hint {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 和「下一站」齐高。它是次要动作，靠没有填色和描边来退后，不靠变小。 */
+.hint-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: var(--control);
+  cursor: pointer;
+  font: 600 var(--control-text)/1 var(--sans);
+  list-style: none;
+  padding: 0;
+}
+
+.hint-open::-webkit-details-marker {
+  display: none;
+}
+
+.hint-open::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 4px 0;
+  border-color: currentColor transparent transparent;
+  transition: transform .18s ease;
+}
+
+.hint[open] .hint-open::after {
+  transform: rotate(180deg);
+}
+
+.hint-body {
+  margin: 2px 0 6px;
+  max-width: 34em;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* margin-left:auto —— 提示隐藏后按钮仍然靠右，不会跳位。 */
+.next {
+  flex: none;
+  margin-left: auto;
+  height: var(--control);
+  border: 2px solid var(--plate);
+  border-radius: 3px;
+  background: var(--plate);
+  color: var(--ink);
+  font: 600 var(--control-text)/1 var(--sans);
+  padding: 0 20px;
+  cursor: pointer;
+}
+
+.next:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--plate);
+}
+
+.next[disabled] {
+  background: rgba(0, 0, 0, .14);
+  border-color: rgba(255, 255, 255, .5);
+  color: var(--plate);
+  cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+  /* 窄屏换成两行，上下余量相应收一些 */
+  .edge-row {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 18px 0;
+  }
+
+  .hint {
+    flex: 1 0 100%;
+  }
+
+  .next {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge,
+  .hint-open::after {
+    transition: none;
+  }
+}
