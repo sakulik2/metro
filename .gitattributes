@@ -1,0 +1,3 @@
+# 统一用 LF 存库，检出时不改写工作区，免得 Windows 上每次提交都刷 CRLF 警告
+* text=auto eol=lf
+*.png binary
