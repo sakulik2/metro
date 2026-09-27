@@ -9,8 +9,8 @@ shots/
 # 单文件版的真身在 legacy 分支上，这里的副本只是方便随手打开
 legacy/
 
-# 不锁包管理器：npm / yarn / pnpm / bun 都能跑，谁的锁文件都不进库
-package-lock.json
+# 只提交 npm 的锁文件：传递依赖带范围，不锁就没有可复现的构建，CI 的 npm ci 也需要它。
+# 其他包管理器照样能装，它们自己的锁文件不进库，免得两份锁分叉。
 yarn.lock
 pnpm-lock.yaml
 bun.lock
