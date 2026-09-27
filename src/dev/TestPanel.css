@@ -1,0 +1,165 @@
+/*
+ * 跳关索引。
+ *
+ * 材料跟着绘图室走：方格纸底、铅笔描边、零圆角。它是钉在绘图室墙上的一张
+ * 索引卡 —— 一列站号码，和界面上那块站号牌同一套写法。
+ * 这里不该长成通用 debug 面板的样子。
+ */
+
+.tp {
+  --paper: #E6E9E0;
+  --grid: #C3CCC0;
+  --graphite: #2B2E2A;
+  --note: #5C6459;
+  --line: #9B0056;
+
+  min-height: 100vh;
+  background: var(--paper);
+  /* 方格纸：两道等距线画出格子 */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--graphite);
+  padding: 40px var(--gut);
+}
+
+.tp-card {
+  max-width: 660px;
+  margin: 0 auto;
+  background: var(--paper);
+  border: 2px solid var(--graphite);
+  padding: 28px 30px 30px;
+}
+
+.tp-year {
+  margin: 0 0 4px;
+  font: 700 14px/1 var(--cond);
+  letter-spacing: .12em;
+  color: var(--line);
+}
+
+.tp-title {
+  margin: 0 0 18px;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.tp-how,
+.tp-also {
+  margin: 0 0 24px;
+  max-width: 52ch;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--note);
+}
+
+/* 敲错了：说清楚哪个词不认，然后把能用的摆在下面 */
+.tp-miss {
+  margin: 0 0 20px;
+  padding: 11px 14px;
+  border-left: 3px solid var(--line);
+  background: #DDE2D8;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tp code {
+  font: 600 13px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace;
+  background: #DDE2D8;
+  padding: 1px 5px;
+}
+
+.tp-group {
+  margin: 0 0 22px;
+}
+
+.tp-group-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--line);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.tp-badge {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  background: var(--line);
+  color: var(--paper);
+  font: 700 13px/22px var(--sans);
+  text-align: center;
+}
+
+.tp-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tp-list a {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--grid);
+  color: inherit;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.tp-list a:hover {
+  background: var(--line);
+  color: var(--paper);
+}
+
+.tp-list a:hover code {
+  background: rgb(255 255 255 / .22);
+  color: var(--paper);
+}
+
+.tp-list code {
+  flex: none;
+  width: 6.5em;
+}
+
+.tp :focus-visible {
+  outline: 2px solid var(--line);
+  outline-offset: 2px;
+}
+
+.tp-back {
+  margin: 26px 0 0;
+  padding-top: 18px;
+  border-top: 2px solid var(--graphite);
+  font-size: 15px;
+}
+
+.tp-back a {
+  color: var(--line);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .tp {
+    padding: 24px var(--gut);
+  }
+
+  .tp-card {
+    padding: 20px 18px 22px;
+  }
+
+  .tp-title {
+    font-size: 23px;
+  }
+
+  .tp-list code {
+    width: 5.2em;
+  }
+}
