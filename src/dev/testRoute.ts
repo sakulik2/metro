@@ -1,3 +1,4 @@
+import type { Stage } from '../game/booking';
 import { GAMES, LINES } from '../data/lines';
 import type { Picks } from '../data/types';
 import type { Journey } from '../state/journey';
@@ -15,7 +16,8 @@ import type { Journey } from '../state/journey';
 
 export type Target =
   | { kind: 'stop'; line: number; stop: number }
-  | { kind: 'game'; line: number }
+  /** stage 只对售票窗口有意义：它内部还分 1863 和 1971 两段。 */
+  | { kind: 'game'; line: number; stage?: Stage }
   | { kind: 'transfer'; line: number }
   | { kind: 'end' };
 
@@ -25,6 +27,10 @@ const ALIASES: Record<string, () => Target | null> = {
   ticket: () => gameTarget('booking'),
   booking: () => gameTarget('booking'),
   售票: () => gameTarget('booking'),
+  // 1971 那两幕在五位乘客之后，单独给个入口
+  decimal: () => gameTarget('booking', 'decimal'),
+  '1971': () => gameTarget('booking', 'decimal'),
+  十进制: () => gameTarget('booking', 'decimal'),
   drawing: () => gameTarget('drawing'),
   beck: () => gameTarget('drawing'),
   绘图: () => gameTarget('drawing'),
@@ -35,10 +41,10 @@ const ALIASES: Record<string, () => Target | null> = {
 };
 
 /** 找出挂着某个游戏的那条线。 */
-function gameTarget(id: string): Target | null {
+function gameTarget(id: string, stage?: Stage): Target | null {
   const entry = Object.entries(GAMES).find(([, g]) => g === id);
   if (!entry) return null;
-  return { kind: 'game', line: Number(entry[0]) };
+  return { kind: 'game', line: Number(entry[0]), ...(stage ? { stage } : {}) };
 }
 
 /** 线路的英文短名，取自题库文件名，可以直接写在 URL 里。 */
@@ -179,7 +185,8 @@ export function describe(target: Target): string {
     }
     case 'game': {
       const id = GAMES[target.line];
-      return id === 'booking' ? '售票窗口（1863）' : '绘图室（1931）';
+      if (id !== 'booking') return '绘图室（1931）';
+      return target.stage === 'decimal' ? '售票窗口 · 十进制日（1971）' : '售票窗口（1863）';
     }
     case 'transfer':
       return `${LINES[target.line]?.id} 号线走完，换乘页`;

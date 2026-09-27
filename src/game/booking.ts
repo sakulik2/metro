@@ -117,9 +117,15 @@ export type Game = {
   decimalPick: string | null;
 };
 
-export const newGame = (): Game => ({
-  stage: 'brief',
-  round: 0,
+/**
+ * 开一局。
+ *
+ * stage 只有测试跳关会传：1971 那两幕在五位乘客之后，不给个入口就得每次
+ * 从头数一遍钱。见 src/dev/testRoute.ts。
+ */
+export const newGame = (stage: Stage = 'brief'): Game => ({
+  stage,
+  round: stage === 'decimal' || stage === 'closed' ? ROUNDS.length - 1 : 0,
   tray: [],
   cleanRuns: 0,
   decimalPick: null,

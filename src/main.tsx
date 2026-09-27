@@ -23,7 +23,10 @@ function render() {
     ) : route.mode === 'unknown' ? (
       <TestPanel unknown={route.raw} />
     ) : route.mode === 'jump' ? (
-      <App start={journeyFor(route.target)} />
+      <App
+        start={journeyFor(route.target)}
+        gameStage={route.target.kind === 'game' ? route.target.stage : undefined}
+      />
     ) : (
       <App />
     );

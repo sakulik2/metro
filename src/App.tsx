@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { LINES, TOTAL_STOPS, gameAfter, lineTitle } from './data/lines';
+import type { Stage } from './game/booking';
 import type { Journey } from './state/journey';
 import {
   answered,
@@ -22,8 +23,8 @@ import { StopList } from './components/StopList';
 import { Transfer } from './components/Transfer';
 import './App.css';
 
-/** start 只有测试跳关会传，见 src/dev/testRoute.ts。 */
-export function App({ start }: { start?: Journey } = {}) {
+/** start / gameStage 只有测试跳关会传，见 src/dev/testRoute.ts。 */
+export function App({ start, gameStage }: { start?: Journey; gameStage?: Stage } = {}) {
   const [journey, dispatch] = useReducer(journeyReducer, start ?? initialJourney);
   const [showList, setShowList] = useState(false);
 
@@ -100,7 +101,9 @@ export function App({ start }: { start?: Journey } = {}) {
                 />
               )}
 
-              {phase === 'game' && gameAfter(line) === 'booking' && <BookingOffice />}
+              {phase === 'game' && gameAfter(line) === 'booking' && (
+                <BookingOffice stage={gameStage} />
+              )}
               {phase === 'game' && gameAfter(line) === 'drawing' && <DrawingBoard />}
 
               {phase === 'transfer' && (

@@ -41,6 +41,13 @@ export function TestPanel({ unknown }: { unknown?: string }) {
                 </li>
               );
             })}
+            {/* 售票窗口跨两个年代，1971 那两幕单列一行 */}
+            <li>
+              <a href={hrefFor('decimal')}>
+                <code>decimal</code>
+                <span>{describe({ kind: 'game', line: 0, stage: 'decimal' })}</span>
+              </a>
+            </li>
             <li>
               <a href={hrefFor('end')}>
                 <code>end</code>
