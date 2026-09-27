@@ -16,7 +16,7 @@ import {
   type Stage,
 } from '../game/booking';
 import { coinById, tally } from '../money/coins';
-import { format, formatNewPence, slash, toStatutoryNewPence } from '../money/lsd';
+import { format, slash } from '../money/lsd';
 import { CoinFace } from './CoinFace';
 import './BookingOffice.css';
 
@@ -216,11 +216,6 @@ export function BookingOffice({ stage }: { stage?: Stage } = {}) {
                   {c.why}
                 </p>
               ))}
-
-              <p className="decimal-check">
-                这个库算出来：精确 {formatNewPence(DECIMAL_DAY.fare)}，法定{' '}
-                {toStatutoryNewPence(DECIMAL_DAY.fare)}p。
-              </p>
 
               <p className="decimal-closing">{DECIMAL_DAY.closing}</p>
 

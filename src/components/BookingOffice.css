@@ -464,12 +464,6 @@
   color: var(--accent);
 }
 
-.decimal-check {
-  padding: 12px 14px;
-  background: var(--ground-dark);
-  font-size: 13px;
-}
-
 .decimal-closing {
   font-size: 15px;
   line-height: 1.7;
