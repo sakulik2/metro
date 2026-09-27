@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GAMES, LINES } from '../data/lines';
 import { LINE_SETS } from '../game/drawing';
 import { forgetCleared, readCleared, setCleared } from '../state/cleared';
-import { describe, hrefFor, parseTarget } from './testRoute';
+import { describe, exitHref, hrefFor, parseTarget } from './testRoute';
 import './TestPanel.css';
 
 /**
@@ -189,7 +189,7 @@ export function TestPanel({ unknown }: { unknown?: string }) {
         </p>
 
         <p className="tp-back">
-          <a href="#/">回到正常流程</a>
+          <a href={exitHref()}>回到正常流程</a>
         </p>
       </div>
     </div>

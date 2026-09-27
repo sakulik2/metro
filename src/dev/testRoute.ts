@@ -159,6 +159,27 @@ export function hrefFor(slug: string, loc: { pathname: string } = window.locatio
 }
 
 /**
+ * 「回到正常流程」该指向哪里。
+ *
+ * 不能写死 `#/`：从路径式进来时（/test 或 /test/irt），改哈希不会动 pathname，
+ * readRoute 仍然从路径读出 test，于是点了没反应 —— 而且 /test/irt#/ 连跳关都
+ * 退不出来，还停在那条线上。所以路径式要回到根路径，哈希式才用哈希。
+ */
+export function exitHref(loc: { pathname: string } = window.location): string {
+  return /^\/test(\/|$)/i.test(loc.pathname) ? '/' : '#/';
+}
+
+/**
+ * 回测试面板该指向哪里，跟着当前入口方式走。
+ *
+ * 从 /test 跳进小游戏之后，退出按钮用这个回索引卡 —— 路径式进来的要回
+ * `/test`，哈希式进来的回 `#/test`，写死哪一种都会在另一种下失效。
+ */
+export function panelHref(loc: { pathname: string } = window.location): string {
+  return /^\/test(\/|$)/i.test(loc.pathname) ? '/test' : '#/test';
+}
+
+/**
  * 把目标变成一份完整的旅程状态。
  *
  * 之前的站按正确答案填上：换乘页要列漏掉的站，线网图要按线报分，
