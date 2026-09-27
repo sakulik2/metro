@@ -214,11 +214,24 @@ export function geoPolyline(): { x: number; y: number }[] {
     y: -(st.lat - first.lat),
   }));
 
-  // 缩放到和取直后的折线同样的横向跨度，两者才好叠着比
+  /*
+   * 缩放到取直后那条折线的范围内，两者才好叠着比。
+   *
+   * 必须**两轴都量，取较紧的那个**。只按横向跨度缩放的话，遇到南北长东西窄的
+   * 线（曼哈顿就是）会把竖向拉爆：横向对齐了，竖向冲出格子好几倍，
+   * 而画布尺寸是按三条折线的并集算的，于是整张纸被撑成细长条。
+   */
   const ideal = idealPolyline();
-  const idealSpan = Math.max(...ideal.map((p) => p.x)) - Math.min(...ideal.map((p) => p.x));
-  const rawSpan = Math.max(...raw.map((p) => p.x)) - Math.min(...raw.map((p) => p.x));
-  const scale = rawSpan === 0 ? 1 : idealSpan / rawSpan;
+  const span = (pts: { x: number; y: number }[], axis: 'x' | 'y') =>
+    Math.max(...pts.map((p) => p[axis])) - Math.min(...pts.map((p) => p[axis]));
+
+  const fit = (axis: 'x' | 'y') => {
+    const r = span(raw, axis);
+    return r === 0 ? Infinity : span(ideal, axis) / r;
+  };
+
+  const scale = Math.min(fit('x'), fit('y'));
+  if (!Number.isFinite(scale)) return raw;
 
   return raw.map((p) => ({ x: p.x * scale, y: p.y * scale }));
 }
