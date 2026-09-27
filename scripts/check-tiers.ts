@@ -34,6 +34,61 @@ const ok = (cond: boolean, msg: string): void => {
 
 const { aidFor, hintLevelOf, hintText, canSettle, rejectionOf, ROUNDS, newGame } = booking;
 
+/*
+ * 内容真的换了没有。
+ *
+ * 这是整件事的要点：只拆提示不换内容，第二遍考的是记性 ——
+ * 五个固定金额记住比算出来容易得多。所以每一位乘客的几套之间，
+ * 应找金额必须两两不同。
+ */
+const { format } = await import('../src/money/lsd.ts');
+
+for (const [i, r] of ROUNDS.entries()) {
+  ok(r.variants.length >= 3, `第 ${i + 1} 位乘客只有 ${r.variants.length} 套，至少要 3 套`);
+
+  const dues = r.variants.map((_, run) => {
+    const g = { ...newGame('counting', run), round: i };
+    return booking.changeDue(g);
+  });
+
+  const seen = new Map<number, number>();
+  dues.forEach((d, n) => {
+    const first = seen.get(d);
+    if (first !== undefined) {
+      bad.push(
+        `第 ${i + 1} 位乘客 第 ${first + 1} 套和第 ${n + 1} 套应找金额相同（${format(d)}）` +
+          ' —— 重玩时记住就行，等于没换',
+      );
+    }
+    seen.set(d, n);
+  });
+
+  // 每一套都得能找零，而且金额大于零：否则这一套根本不用算
+  dues.forEach((d, n) => {
+    ok(d > 0, `第 ${i + 1} 位乘客 第 ${n + 1} 套不用找零，没有可算的`);
+  });
+
+  // theme 是这一位要讲的那件事，换内容不能把课换掉
+  ok(typeof r.theme === 'string' && r.theme.length > 0, `第 ${i + 1} 位乘客没有 theme`);
+}
+
+// 套数循环：用完从头来，但难度已封顶，不会退回简单
+{
+  const r = ROUNDS[0];
+  ok(r !== undefined, '第一位乘客不存在');
+  if (r) {
+    const n = r.variants.length;
+    ok(booking.variantOf(r, n) === booking.variantOf(r, 0), '套数没有循环');
+    ok(booking.variantOf(r, n + 1) === booking.variantOf(r, 1), '套数循环错位');
+  }
+}
+
+// 重开窗口不能把 run 丢掉，否则按一下就退回第一批乘客
+{
+  const g = booking.play({ ...newGame('counting', 2) }, { type: 'restart' });
+  ok(g.run === 2, `重开窗口把 run 从 2 变成了 ${g.run}，攒到的进度被抹了`);
+}
+
 const TIERS = [0, 1, 2];
 
 // 1 单调：后一档不能比前一档给得多
