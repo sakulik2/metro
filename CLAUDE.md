@@ -8,16 +8,21 @@ A Chinese-language quiz about the London Underground: 20 questions split across 
 
 ## Commands
 
+Any package manager works — npm, yarn, pnpm and bun have all been run against these scripts. No lockfile is committed, and all of them are gitignored, so install with whichever you have and don't add one back.
+
 ```bash
+npm install            # or yarn / pnpm install / bun install
 npm run dev            # dev server
 npm run build          # tsc -b && vite build
 npm run check          # types + all three validators; run this before calling work done
 npm run check:lines    # question bank only
 npm run check:money    # £sd arithmetic only
-npm run check:drawing   # drawing-board data only
+npm run check:drawing  # drawing-board data only
 ```
 
-`check:money` runs a `.ts` file directly through Node (v24 here, which executes TypeScript natively). There is no lint step.
+**Node must be ≥ 22.6.** `check:money` is `node scripts/check-money.ts` and relies on Node executing TypeScript natively; on older Node it fails outright. That is the one hard version constraint — the package manager is free, the runtime is not. There is no lint step.
+
+Nothing in `package.json` pins a package manager (no `packageManager`, no `engines`, no `npm run` calls inside scripts), and the binaries resolve from `node_modules/.bin`, so keep it that way when editing scripts.
 
 To see a change in the app, `npm run dev` and drive it in a browser. Reaching a late game means answering through the earlier lines, so for visual work on one component it is usually faster to write a throwaway entry that mounts just that component, screenshot it, then delete the entry and restore `vite.config.ts`.
 
