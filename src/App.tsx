@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { LINES, TOTAL_STOPS, gameAfter, lineTitle } from './data/lines';
+import type { Journey } from './state/journey';
 import {
   answered,
   initialJourney,
@@ -21,8 +22,9 @@ import { StopList } from './components/StopList';
 import { Transfer } from './components/Transfer';
 import './App.css';
 
-export function App() {
-  const [journey, dispatch] = useReducer(journeyReducer, initialJourney);
+/** start 只有测试跳关会传，见 src/dev/testRoute.ts。 */
+export function App({ start }: { start?: Journey } = {}) {
+  const [journey, dispatch] = useReducer(journeyReducer, start ?? initialJourney);
   const [showList, setShowList] = useState(false);
 
   const { line, stop, phase, tick } = journey;
