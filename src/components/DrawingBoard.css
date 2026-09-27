@@ -1,0 +1,402 @@
+/*
+ * 贝克的绘图板，1931 年信号绘图室。
+ *
+ * 三关三套材料：测验是现代站内标识（冷灰、平面），票房是煤气灯木窗口（暗绿、黄铜），
+ * 这里是绘图员的方格纸 —— 冷绿灰纸、印刷格线、铅笔墨色。
+ *
+ * 大胆只花在一处：死板的方格纸上，那条洋红线随玩家一段段亮起。
+ * #9B0056 是大都会线的真实色号，不是挑来装饰的。
+ */
+
+.board {
+  --paper: #E6E9E0;      /* 方格纸，冷绿灰 */
+  --grid: #C3CCC0;       /* 印在纸上的格线 */
+  --graphite: #2B2E2A;   /* 铅笔 */
+  --ghost: #9AA69A;      /* 正解的淡影线 */
+  --met: #9B0056;        /* 大都会线色号 */
+  --note: #5C6459;       /* 页边批注 */
+
+  background: var(--paper);
+  color: var(--graphite);
+  border-top: 4px solid var(--ink);
+  border-bottom: 4px solid var(--ink);
+  padding: 0 0 32px;
+  margin: 0 0 34px;
+}
+
+.board-head {
+  padding: 22px var(--gut) 18px;
+  border-bottom: 2px solid var(--graphite);
+}
+
+/* 年份先读到，它是这一关的定位 */
+.board-year {
+  margin: 0 0 3px;
+  font: 700 15px/1 var(--cond);
+  letter-spacing: .12em;
+  color: var(--met);
+}
+
+.board-title {
+  margin: 0 0 4px;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.board-who {
+  margin: 0;
+  font-size: 14px;
+  color: var(--note);
+}
+
+.board-body {
+  padding: 24px var(--gut) 0;
+}
+
+.board-intro {
+  margin: 0 0 14px;
+  max-width: 46ch;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+/* 规则只有一条，给它一道左边线当引文 */
+.board-rule {
+  margin: 0 0 24px;
+  padding-left: 14px;
+  border-left: 3px solid var(--met);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* ── 方格纸 ─────────────────────────────────────── */
+
+.sheet {
+  margin: 0 0 26px;
+  padding: 10px;
+  background: var(--paper);
+  border: 2px solid var(--graphite);
+  overflow-x: auto;
+}
+
+.sheet-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.sheet-label {
+  font: 600 13px/1 var(--cond);
+  letter-spacing: .02em;
+  fill: var(--graphite);
+}
+
+/* 线条画上去时从起点长出来，只在用户点击后发生 */
+.ink {
+  stroke-dasharray: 2000;
+  animation: ink-in .3s ease-out both;
+}
+
+@keyframes ink-in {
+  from { stroke-dashoffset: 90; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── 正在画：罗盘 ───────────────────────────────── */
+
+.draw-task {
+  margin: 0 0 16px;
+  max-width: 44ch;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--note);
+}
+
+.draw-leg {
+  margin: 0 0 4px;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.draw-true {
+  margin: 0 0 20px;
+  font: 600 14px/1.5 var(--cond);
+  letter-spacing: .03em;
+  color: var(--met);
+}
+
+/*
+ * 方向选择器做成罗盘：3×3 网格中心留空，八格就是八个合法方向。
+ * 这本身就是绘图员丁字尺的形状，比一排标着「正东 / 东北」的按钮诚实。
+ */
+.compass {
+  display: grid;
+  grid-template-columns: repeat(3, 84px);
+  grid-template-rows: repeat(3, 84px);
+  gap: 5px;
+  margin: 0 0 20px;
+}
+
+.compass-hub {
+  border: 2px dashed var(--ghost);
+  border-radius: 50%;
+  margin: 22px;
+}
+
+.compass-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 2px solid var(--graphite);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--graphite);
+  cursor: pointer;
+  padding: 0;
+}
+
+.compass-key:hover {
+  background: var(--met);
+  border-color: var(--met);
+  color: var(--paper);
+}
+
+/* 每个格子里画一段指向该方向的短线，方向自己说明自己 */
+.compass-arm {
+  width: 26px;
+  height: 3px;
+  background: currentColor;
+}
+
+.compass-key[data-dir="N"] .compass-arm,
+.compass-key[data-dir="S"] .compass-arm {
+  transform: rotate(90deg);
+}
+
+.compass-key[data-dir="NE"] .compass-arm,
+.compass-key[data-dir="SW"] .compass-arm {
+  transform: rotate(-45deg);
+}
+
+.compass-key[data-dir="NW"] .compass-arm,
+.compass-key[data-dir="SE"] .compass-arm {
+  transform: rotate(45deg);
+}
+
+.compass-name {
+  font: 600 12px/1 var(--cond);
+  letter-spacing: .04em;
+}
+
+/* ── 按钮 ───────────────────────────────────────── */
+
+.ink-btn,
+.pencil {
+  border-radius: 2px;
+  font: 600 15px/1 var(--sans);
+  padding: 13px 18px;
+  cursor: pointer;
+}
+
+.ink-btn {
+  border: 2px solid var(--met);
+  background: var(--met);
+  color: var(--paper);
+}
+
+.ink-btn:hover {
+  background: #B4116A;
+  border-color: #B4116A;
+}
+
+.pencil {
+  border: 2px solid var(--graphite);
+  background: transparent;
+  color: var(--graphite);
+}
+
+.pencil:hover {
+  background: var(--graphite);
+  color: var(--paper);
+}
+
+.board :focus-visible {
+  outline: 2px solid var(--met);
+  outline-offset: 3px;
+}
+
+/* ── 画完了 ─────────────────────────────────────── */
+
+.draw-done,
+.reveal {
+  border-top: 2px solid var(--graphite);
+  padding-top: 20px;
+  max-width: 44em;
+}
+
+.done-call {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.legs {
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.legs li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 10px 0;
+  border-top: 1px solid var(--grid);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.legs li:last-child {
+  border-bottom: 1px solid var(--grid);
+}
+
+.legs b {
+  flex: none;
+  min-width: 11em;
+  font-weight: 600;
+}
+
+/* 取了最接近的方向：洋红。取偏了：灰，不用红 —— 这是取舍不是错误 */
+.legs li[data-verdict="right"] span {
+  color: var(--met);
+  font-weight: 600;
+}
+
+.legs li[data-verdict="off"] span {
+  color: var(--note);
+}
+
+.board-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ── 揭示：图上等长，地面上不等 ─────────────────── */
+
+.reveal-title {
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.bars {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+}
+
+.bar-name {
+  flex: none;
+  width: 11em;
+  font-size: 14px;
+}
+
+.bar-track {
+  flex: 1;
+  height: 13px;
+  background: var(--grid);
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--met);
+}
+
+.bar-km {
+  flex: none;
+  width: 4.2em;
+  text-align: right;
+  font: 600 13px/1 var(--cond);
+  letter-spacing: .03em;
+  color: var(--note);
+}
+
+.bars-note {
+  margin: 0 0 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--met);
+}
+
+.reveal-text {
+  margin: 0 0 14px;
+  max-width: 46ch;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.reveal-history {
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  max-width: 46ch;
+  background: #DDE2D8;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--note);
+}
+
+/* ── 窄屏 ───────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .board-title {
+    font-size: 22px;
+  }
+
+  .draw-leg {
+    font-size: 18px;
+  }
+
+  .reveal-title {
+    font-size: 19px;
+  }
+
+  .compass {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 72px);
+  }
+
+  .bar-name {
+    width: 8.5em;
+    font-size: 13px;
+  }
+
+  .legs b {
+    min-width: 0;
+    flex: 1 0 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
