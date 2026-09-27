@@ -26,7 +26,18 @@ npm run check:drawing  # drawing-board data only
 
 Nothing in `package.json` pins a package manager (no `packageManager`, no `engines`, no `npm run` calls inside scripts), and the binaries resolve from `node_modules/.bin`, so keep it that way when editing scripts.
 
-To see a change in the app, `npm run dev` and drive it in a browser. Reaching a late game means answering through the earlier lines, so for visual work on one component it is usually faster to write a throwaway entry that mounts just that component, screenshot it, then delete the entry and restore `vite.config.ts`.
+To see a change in the app, `npm run dev` and then **jump straight to it with a `/test` route** rather than answering through the earlier lines:
+
+| route | lands on |
+|---|---|
+| `#/test` | the index of every destination |
+| `#/test/3-02` | line 3, stop 2 (same notation as the on-screen stop plate) |
+| `#/test/1-x` | the transfer screen after line 1 |
+| `#/test/ticket` / `#/test/decimal` | the booking office, 1863 / 1971 |
+| `#/test/drawing` | the drawing room |
+| `#/test/end` | the network map |
+
+Prefer this over a throwaway entry that mounts a single component. Such a preview lacks the app's ancestor chain, and that has already hidden a real bug: an absolutely-positioned element resolved against the wrong ancestor and flew 697px off-screen, which the standalone preview could not reproduce. **Verify against the real app.**
 
 ## Architecture
 
@@ -35,6 +46,14 @@ To see a change in the app, `npm run dev` and drive it in a browser. Reaching a 
 `src/state/journey.ts` holds `line`, `stop`, `phase`, `picks`. **Everything else is derived** — scores, per-stop verdicts, the platform-edge button label, which map nodes are filled. Adding a second source of truth for any of that is a bug, not a feature; the stop list and the quiz deliberately read the same `picks`.
 
 `phase` (`src/data/types.ts`) is `'ride' | 'game' | 'transfer' | 'end'`. Walking a line to its last stop goes to `'game'` if that line has one registered, otherwise straight to `'transfer'` (or `'end'` on the last line). Leaving a game resumes that flow.
+
+### The booking office spans two eras
+
+`BookingOffice` covers 1863 and 1971, so it carries **two palettes switched by `data-era`** on the section. The custom properties are named for their role (`--ground`, `--accent`, `--slip`, `--face`, `--edge`…), not for their material — calling the slot `--wood` made the 1971 values a lie, which is why they were renamed. `CoinFace.css` reads `--accent` and `--on-accent` from that scope, so the coins follow the era too.
+
+1971 is British Rail's 1965 corporate identity: rail blue BS 381C 114, warning yellow BS 381C 356, signal red BS 381C 537, pearl grey for the bodyside band. Rail Alphabet is not bundled — Barlow stands in, which is an honest approximation rather than a pretend one. The double arrow is a geometric approximation in inline SVG; the two diagonals **must stay parallel** (the lower arrow is the upper one rotated 180° about the viewBox centre), because crossing them makes it a different mark.
+
+`newGame(stage?)` and `BookingOffice({ stage })` exist only so `/test/decimal` can reach 1971 without counting change five times.
 
 ### Games hang off a registry
 
@@ -69,16 +88,16 @@ These exist because each one caught a real bug. They are the closest thing this 
 - **`check:money`** — 36 assertions taken from `predecimal`'s own tests and the text of the Decimal Currency Act 1969. If the money is wrong the booking office has no point.
 - **`check:drawing`** — recomputes bearings/distances from coordinates, refuses a self-crossing polyline, and fails if the longest leg is under 1.5× the shortest, since then the level has nothing to reveal.
 
-## CI (decided, not built)
+## CI
 
-When CI happens it will be **GitHub Actions building to GitHub Pages, using npm** — npm specifically for CI, even though local work is package-manager-free. No workflow file exists yet; don't add one until asked.
+`.github/workflows/pages.yml` builds `main` to GitHub Pages with npm — npm specifically for CI, even though local work is package-manager-free. The gate is `npm run check` (types + all three validators), which runs before the build.
 
-Two things that will bite whoever writes it:
+Two things it gets right on purpose, so don't "simplify" them back:
 
-- **Use `npm ci`, not `npm install`** — the lockfile is committed, and `ci` installs exactly what it says and fails loudly if `package.json` has drifted out of sync with it.
-- **Pages serves from a subpath**, so `vite.config.ts` needs `base: '/<repo>/'` or every asset 404s. It is currently unset, which is correct for local dev and wrong for Pages.
+- **`npm ci`, not `npm install`** — the lockfile is committed, and `ci` installs exactly what it says and fails loudly if `package.json` has drifted out of sync with it.
+- **Pages serves from a subpath**, so the base is passed on the command line: `npm run build -- --base=/${{ github.event.repository.name }}/`. It stays out of `vite.config.ts` deliberately — an unset base is correct for local dev and `vite preview`, and hardcoding the repo name there would break both.
 
-`npm run check` is the gate worth running in CI: it covers types and all three validators.
+Note when testing that build locally in Git Bash: MSYS rewrites a leading-slash argument into a Windows path, so `--base=/metro/` silently becomes `/Program Files/Git/metro/`. Prefix with `MSYS_NO_PATHCONV=1`. The Ubuntu runner is unaffected.
 
 ## Conventions
 
