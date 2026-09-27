@@ -1,0 +1,106 @@
+/*
+ * 终点的线网图。每条线一行，每站一个圆点。
+ * 轨道线收在最后一个圆点处，不拖尾。
+ */
+
+.end-count {
+  margin: 0 0 4px;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+
+/* 到终点时焦点落在这里让读屏播报成绩，但不画焦点环。 */
+.end-count:focus {
+  outline: none;
+}
+
+.end-sub {
+  margin: 0 0 30px;
+  font-size: 17px;
+  color: var(--body);
+}
+
+.net {
+  margin: 0 0 30px;
+  padding: 0;
+  list-style: none;
+  max-width: 38em;
+}
+
+.net-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 0;
+  border-top: 1px solid var(--rail);
+}
+
+.net-row:last-child {
+  border-bottom: 1px solid var(--rail);
+}
+
+.net-name {
+  flex: none;
+  width: 3.4em;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* flex:none —— 容器包住圆点，轨道线才不会在末站之后拖出一截空轨。 */
+.net-dots {
+  flex: none;
+  display: flex;
+  gap: 7px;
+  position: relative;
+}
+
+.net-dots::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  right: 4px;
+  height: 3px;
+  margin-top: -1.5px;
+  background: var(--rail);
+}
+
+.net-dot {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 3px solid var(--rail);
+  background: var(--tile);
+}
+
+.net-dot[data-mark="right"] {
+  border-color: var(--line);
+  background: var(--line);
+}
+
+.net-dot[data-mark="wrong"] {
+  border-color: var(--line);
+  background: var(--plate);
+}
+
+.net-score {
+  flex: none;
+  margin-left: auto;
+  font: 600 14px/1 var(--cond);
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .end-count {
+    font-size: 30px;
+  }
+
+  .net-name {
+    width: auto;
+    flex: 1;
+  }
+}
