@@ -1,11 +1,18 @@
 /*
- * 贝克的绘图板，1931 年信号绘图室。
+ * 绘图室。
  *
  * 三关三套材料：测验是现代站内标识（冷灰、平面），票房是煤气灯木窗口（暗绿、黄铜），
  * 这里是绘图员的方格纸 —— 冷绿灰纸、印刷格线、铅笔墨色。
  *
- * 大胆只花在一处：死板的方格纸上，那条洋红线随玩家一段段亮起。
- * #9B0056 是大都会线的真实色号，不是挑来装饰的。
+ * 大胆只花在一处：死板的方格纸上，那条线随玩家一段段亮起。
+ *
+ * --route 由组件按数据集内联写上（不能叫 --line：App 会把那个名字写到
+ * document.documentElement 上当全局线路色）。这里的默认值是伦敦大都会线的
+ * 真实色号，只作为兜底；线色本身是每条线自己的数据。
+ *
+ * 对比度有下限，由 check:drawing 钉着：线色对纸 ≥ 4.5:1、对格线 ≥ 3:1。
+ * 这不是形式主义 —— 莱克星顿绿的原色 #00933c 对格线只有 2.43，
+ * 9px 的线压在格子上会发虚。
  */
 
 .board {
@@ -13,7 +20,8 @@
   --grid: #C3CCC0;       /* 印在纸上的格线 */
   --graphite: #2B2E2A;   /* 铅笔 */
   --ghost: #9AA69A;      /* 正解的淡影线 */
-  --met: #9B0056;        /* 大都会线色号 */
+  --route: #9B0056;      /* 兜底：大都会线色号，实际由数据集内联覆盖 */
+  --route-hover: #B4116A;
   --note: #5C6459;       /* 页边批注 */
 
   background: var(--paper);
@@ -34,7 +42,7 @@
   margin: 0 0 3px;
   font: 700 15px/1 var(--cond);
   letter-spacing: .12em;
-  color: var(--met);
+  color: var(--route);
 }
 
 .board-title {
@@ -66,7 +74,7 @@
 .board-rule {
   margin: 0 0 24px;
   padding-left: 14px;
-  border-left: 3px solid var(--met);
+  border-left: 3px solid var(--route);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.6;
@@ -142,7 +150,7 @@
   margin: 0 0 20px;
   font: 600 14px/1.5 var(--cond);
   letter-spacing: .03em;
-  color: var(--met);
+  color: var(--route);
 }
 
 /*
@@ -196,8 +204,8 @@
 }
 
 .compass-key:hover {
-  background: var(--met);
-  border-color: var(--met);
+  background: var(--route);
+  border-color: var(--route);
   color: var(--paper);
 }
 
@@ -256,7 +264,7 @@
   font: 600 13px/1 var(--cond);
   font-style: normal;
   letter-spacing: .04em;
-  color: var(--met);
+  color: var(--route);
 }
 
 /*
@@ -268,7 +276,7 @@
 .draw-hint {
   margin: 0 0 20px;
   padding: 10px 13px;
-  border-left: 3px solid var(--met);
+  border-left: 3px solid var(--route);
   background: #DDE2D8;
   max-width: 44ch;
   font-size: 14px;
@@ -293,14 +301,14 @@
 }
 
 .ink-btn {
-  border: 2px solid var(--met);
-  background: var(--met);
+  border: 2px solid var(--route);
+  background: var(--route);
   color: var(--paper);
 }
 
 .ink-btn:hover {
-  background: #B4116A;
-  border-color: #B4116A;
+  background: var(--route-hover);
+  border-color: var(--route-hover);
 }
 
 .pencil {
@@ -315,7 +323,7 @@
 }
 
 .board :focus-visible {
-  outline: 2px solid var(--met);
+  outline: 2px solid var(--route);
   outline-offset: 3px;
 }
 
@@ -363,7 +371,7 @@
 
 /* 取了最接近的方向：洋红。取偏了：灰，不用红 —— 这是取舍不是错误 */
 .legs li[data-verdict="right"] span {
-  color: var(--met);
+  color: var(--route);
   font-weight: 600;
 }
 
@@ -415,7 +423,7 @@
 .bar-fill {
   display: block;
   height: 100%;
-  background: var(--met);
+  background: var(--route);
 }
 
 .bar-km {
@@ -431,7 +439,7 @@
   margin: 0 0 22px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--met);
+  color: var(--route);
 }
 
 .reveal-text {

@@ -3,31 +3,24 @@ import {
   COMPASS,
   DIR_ANGLE,
   DIR_NAME,
-  INTRO,
-  LEGS,
-  REVEAL,
-  RULE,
-  STATIONS,
-  TASK,
-  TIER_NOTE,
-  TITLE,
-  WHO,
-  YEAR,
+  SET_COUNT,
   aidFor,
   allDrawn,
-  hintLevelOf,
-  hintText,
   draw,
   geoPolyline,
+  hintLevelOf,
+  hintText,
   idealPolyline,
+  lineOf,
   newBoard,
   polyline,
   rightCount,
   spread,
+  tierNote,
   verdictOf,
   type Dir,
 } from '../game/drawing';
-import { markCleared, tierFor } from '../state/cleared';
+import { markCleared, runFor, tierOf } from '../state/cleared';
 import './DrawingBoard.css';
 
 /** 网格一格多少像素，以及画布四周留白。 */
@@ -35,28 +28,36 @@ const CELL = 74;
 const PAD = 52;
 
 /**
- * 贝克的绘图板，1931 年。
+ * 绘图室。画哪条线由通关次数决定，见 src/game/drawing.ts 的 setOf()。
  *
- * 大胆只花在一处：死板的方格纸上，那条洋红线随玩家一段段亮起。
- * 洋红 #9B0056 是大都会线的真实色号，不是挑来装饰的。
+ * 大胆只花在一处：死板的方格纸上，那条线随玩家一段段亮起。
+ * 线色由数据集给（--route），因为每条线有自己的色号 —— 伦敦那条是大都会线
+ * 真实色号，不是挑来装饰的。
  */
 /** 鼠标悬停时跟着走的浮标。方向名不再常驻九个格子里，读的时候才出现。 */
 type Float = { dir: Dir; x: number; y: number };
 
-export function DrawingBoard() {
-  const [board, stroke] = useReducer(draw, undefined, newBoard);
+/** set 只有测试跳关会传，见 src/dev/testRoute.ts。 */
+export function DrawingBoard({ set }: { set?: number } = {}) {
+  /*
+   * 通关次数只在挂载时读一次，一局之内定死。
+   *
+   * 它同时决定两件事：画哪条线（内容），和拆掉多少提示（难度）。
+   * 每次渲染都去读的话，本局通关把次数 +1，线会在玩家眼前换掉。
+   */
+  const [run] = useState(() => runFor('drawing'));
+  const idx = set ?? run % SET_COUNT;
+
+  const [board, stroke] = useReducer(draw, undefined, () => newBoard(idx));
   const [float, setFloat] = useState<Float | null>(null);
   const compassRef = useRef<HTMLDivElement>(null);
 
-  /*
-   * 难度只在挂载时读一次。读成 state 而不是每次渲染都读，是因为本局中途
-   * 通关会把次数 +1，那时如果重算，提示会在玩家眼前忽然消失。
-   */
-  const [tier] = useState(() => tierFor('drawing'));
+  const line = lineOf(board);
+  const tier = tierOf(run);
   const aid = aidFor(tier);
-  const note = TIER_NOTE[tier];
+  const note = tierNote(tier, line);
 
-  // 七段都画完就算通关，记一次。翻不翻开代价是玩家的事，不影响这个。
+  // 全部段画完就算通关，记一次。翻不翻开代价是玩家的事，不影响这个。
   const counted = useRef(false);
   useEffect(() => {
     if (allDrawn(board) && !counted.current) {
@@ -78,8 +79,8 @@ export function DrawingBoard() {
 
   const done = allDrawn(board);
   const drawnPts = polyline(board);
-  const idealPts = idealPolyline();
-  const geoPts = geoPolyline();
+  const idealPts = idealPolyline(line.legs);
+  const geoPts = geoPolyline(line.stations, line.legs);
 
   // 画布范围把三条折线都算进去：地理实况、正解、玩家画的
   const all = [...idealPts, ...drawnPts, ...geoPts];
@@ -93,23 +94,29 @@ export function DrawingBoard() {
   const px = (x: number) => (x - minX) * CELL + PAD;
   const py = (y: number) => (y - minY) * CELL + PAD;
 
-  const leg = LEGS[board.at];
-  const { min, max, ratio } = spread();
+  const leg = line.legs[board.at];
+  const { min, max, ratio } = spread(line.legs);
   const hint = leg ? hintText(leg, hintLevelOf(board.hintsUsed)) : null;
 
   return (
-    <section className="board">
+    <section
+      className="board"
+      /* 线色跟着数据集走。内联写在这里，和 TestPanel 给每条线上色同一个做法。 */
+      style={
+        { '--route': line.colour, '--route-hover': line.colourHover } as React.CSSProperties
+      }
+    >
       <div className="board-head">
-        <p className="board-year">{YEAR}</p>
-        <h2 className="board-title">{TITLE}</h2>
-        <p className="board-who">{WHO}</p>
+        <p className="board-year">{line.year}</p>
+        <h2 className="board-title">{line.title}</h2>
+        <p className="board-who">{line.who}</p>
       </div>
 
       <div className="board-body">
         {!board.revealed && (
           <>
-            <p className="board-intro">{INTRO}</p>
-            <p className="board-rule">{RULE}</p>
+            <p className="board-intro">{line.intro}</p>
+            <p className="board-rule">{line.rule}</p>
             {note && <p className="board-tier">{note}</p>}
           </>
         )}
@@ -122,7 +129,7 @@ export function DrawingBoard() {
             width={w}
             height={h}
             role="img"
-            aria-label={`线路图草稿，已画 ${board.at} 段，共 ${LEGS.length} 段`}
+            aria-label={`线路图草稿，已画 ${board.at} 段，共 ${line.legs.length} 段`}
           >
             <defs>
               <pattern id="grid" width={CELL / 2} height={CELL / 2} patternUnits="userSpaceOnUse">
@@ -151,7 +158,7 @@ export function DrawingBoard() {
             {/* 地理实况上的站位，小空心点 */}
             {aid.ghost && geoPts.map((p, i) => (
               <circle
-                key={`geo-${STATIONS[i]?.name ?? i}`}
+                key={`geo-${line.stations[i]?.name ?? i}`}
                 cx={px(p.x)}
                 cy={py(p.y)}
                 r="4"
@@ -180,7 +187,7 @@ export function DrawingBoard() {
                 className="ink"
                 points={drawnPts.map((p) => `${px(p.x)},${py(p.y)}`).join(' ')}
                 fill="none"
-                stroke="var(--met)"
+                stroke="var(--route)"
                 strokeWidth="9"
                 strokeLinejoin="round"
                 strokeLinecap="round"
@@ -202,9 +209,9 @@ export function DrawingBoard() {
 
             {/* 站点：画到哪里露到哪里 */}
             {drawnPts.map((p, i) => {
-              const st = STATIONS[i];
+              const st = line.stations[i];
               if (!st) return null;
-              const last = i === STATIONS.length - 1;
+              const last = i === line.stations.length - 1;
               return (
                 <g key={st.name}>
                   <circle
@@ -232,7 +239,7 @@ export function DrawingBoard() {
         {/* 还在画：罗盘 */}
         {!done && leg && (
           <div className="draw-now">
-            <p className="draw-task">{TASK}</p>
+            <p className="draw-task">{line.task}</p>
             <p className="draw-leg">
               第 {board.at + 1} 段　{leg.from} → {leg.to}
             </p>
@@ -320,10 +327,11 @@ export function DrawingBoard() {
         {done && !board.revealed && (
           <div className="draw-done" aria-live="polite">
             <p className="done-call">
-              七个站连起来了。{rightCount(board)} 段取了最接近真实走向的方向，共 {LEGS.length} 段。
+              {line.stations.length} 个站连起来了。{rightCount(board)} 段取了最接近真实走向的方向，共{' '}
+              {line.legs.length} 段。
             </p>
             <ul className="legs">
-              {LEGS.map((l, i) => {
+              {line.legs.map((l, i) => {
                 const v = verdictOf(board, i);
                 const picked = board.drawn[i];
                 return (
@@ -353,11 +361,11 @@ export function DrawingBoard() {
         {/* 揭示：图好用，但代价是距离全没了 */}
         {board.revealed && (
           <div className="reveal" aria-live="polite">
-            <h3 className="reveal-title">{REVEAL.title}</h3>
+            <h3 className="reveal-title">{line.reveal.title}</h3>
 
             {/* 段长条形图：图上等长，地面上不等 */}
             <ul className="bars">
-              {LEGS.map((l) => (
+              {line.legs.map((l) => (
                 <li key={`${l.from}-${l.to}`} className="bar-row">
                   <span className="bar-name">
                     {l.from} → {l.to}
@@ -373,9 +381,9 @@ export function DrawingBoard() {
               图上每段一格，地面上 {min} 到 {max} 公里，差 {ratio} 倍。
             </p>
 
-            <p className="reveal-text">{REVEAL.spacing}</p>
-            <p className="reveal-text">{REVEAL.distortion}</p>
-            <p className="reveal-history">{REVEAL.history}</p>
+            <p className="reveal-text">{line.reveal.spacing}</p>
+            <p className="reveal-text">{line.reveal.distortion}</p>
+            <p className="reveal-history">{line.reveal.history}</p>
 
             <button type="button" className="pencil" onClick={() => stroke({ type: 'restart' })}>
               重画一遍

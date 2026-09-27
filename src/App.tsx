@@ -23,8 +23,12 @@ import { StopList } from './components/StopList';
 import { Transfer } from './components/Transfer';
 import './App.css';
 
-/** start / gameStage 只有测试跳关会传，见 src/dev/testRoute.ts。 */
-export function App({ start, gameStage }: { start?: Journey; gameStage?: Stage } = {}) {
+/** start / gameStage / gameSet 只有测试跳关会传，见 src/dev/testRoute.ts。 */
+export function App({
+  start,
+  gameStage,
+  gameSet,
+}: { start?: Journey; gameStage?: Stage; gameSet?: number } = {}) {
   const [journey, dispatch] = useReducer(journeyReducer, start ?? initialJourney);
   const [showList, setShowList] = useState(false);
 
@@ -104,7 +108,9 @@ export function App({ start, gameStage }: { start?: Journey; gameStage?: Stage }
               {phase === 'game' && gameAfter(line) === 'booking' && (
                 <BookingOffice stage={gameStage} />
               )}
-              {phase === 'game' && gameAfter(line) === 'drawing' && <DrawingBoard />}
+              {phase === 'game' && gameAfter(line) === 'drawing' && (
+                <DrawingBoard set={gameSet} />
+              )}
 
               {phase === 'transfer' && (
                 <Transfer

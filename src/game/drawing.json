@@ -1,113 +1,120 @@
 {
-  "station": "绘图",
-  "title": "信号绘图室",
-  "year": 1931,
-  "who": "Harry Beck，伦敦地铁绘图员",
-  "intro": "贝克 1925 年进伦敦地铁，在信号工程师办公室画电路图。这条 1863 年的老线在地理图上歪歪扭扭，他想试试把它画成电路图那样——只用横线、竖线和 45 度斜线。",
-  "task": "逐段选方向，把七个站连起来。每段只能取 45 度的整数倍，而且要挑最接近真实走向的那一个。",
-  "rule": "横、竖、45 度斜线，三种之外不画。",
-  "stations": [
+  "lines": [
     {
-      "name": "帕丁顿",
-      "historicName": "Paddington (Bishop's Road)",
-      "lat": 51.5186,
-      "lon": -0.1785
-    },
-    {
-      "name": "埃奇韦尔路",
-      "historicName": "Edgware Road",
-      "lat": 51.52,
-      "lon": -0.1678
-    },
-    {
-      "name": "贝克街",
-      "historicName": "Baker Street",
-      "lat": 51.522,
-      "lon": -0.157
-    },
-    {
-      "name": "波特兰路",
-      "historicName": "Portland Road",
-      "lat": 51.5238,
-      "lon": -0.1438
-    },
-    {
-      "name": "高尔街",
-      "historicName": "Gower Street",
-      "lat": 51.5258,
-      "lon": -0.1358
-    },
-    {
-      "name": "国王十字",
-      "historicName": "King's Cross",
-      "lat": 51.5302,
-      "lon": -0.1241
-    },
-    {
-      "name": "法灵顿街",
-      "historicName": "Farringdon Street",
-      "lat": 51.5206,
-      "lon": -0.105
+      "station": "绘图",
+      "title": "信号绘图室",
+      "year": 1931,
+      "who": "Harry Beck，伦敦地铁绘图员",
+      "intro": "贝克 1925 年进伦敦地铁，在信号工程师办公室画电路图。这条 1863 年的老线在地理图上歪歪扭扭，他想试试把它画成电路图那样——只用横线、竖线和 45 度斜线。",
+      "task": "逐段选方向，把 7 个站连起来。每段只能取 45 度的整数倍，而且要挑最接近真实走向的那一个。",
+      "rule": "横、竖、45 度斜线，三种之外不画。",
+      "colour": "#9B0056",
+      "colourHover": "#B4116A",
+      "blindHint": "贝克画图时靠的也不是随手可查的坐标。",
+      "stations": [
+        {
+          "name": "帕丁顿",
+          "historicName": "Paddington (Bishop's Road)",
+          "lat": 51.5186,
+          "lon": -0.1785
+        },
+        {
+          "name": "埃奇韦尔路",
+          "historicName": "Edgware Road",
+          "lat": 51.52,
+          "lon": -0.1678
+        },
+        {
+          "name": "贝克街",
+          "historicName": "Baker Street",
+          "lat": 51.522,
+          "lon": -0.157
+        },
+        {
+          "name": "波特兰路",
+          "historicName": "Portland Road",
+          "lat": 51.5238,
+          "lon": -0.1438
+        },
+        {
+          "name": "高尔街",
+          "historicName": "Gower Street",
+          "lat": 51.5258,
+          "lon": -0.1358
+        },
+        {
+          "name": "国王十字",
+          "historicName": "King's Cross",
+          "lat": 51.5302,
+          "lon": -0.1241
+        },
+        {
+          "name": "法灵顿街",
+          "historicName": "Farringdon Street",
+          "lat": 51.5206,
+          "lon": -0.105
+        }
+      ],
+      "legs": [
+        {
+          "from": "帕丁顿",
+          "to": "埃奇韦尔路",
+          "km": 0.76,
+          "bearing": 11.9,
+          "snap": "E",
+          "offBy": 11.9
+        },
+        {
+          "from": "埃奇韦尔路",
+          "to": "贝克街",
+          "km": 0.78,
+          "bearing": 16.6,
+          "snap": "E",
+          "offBy": 16.6
+        },
+        {
+          "from": "贝克街",
+          "to": "波特兰路",
+          "km": 0.93,
+          "bearing": 12.4,
+          "snap": "E",
+          "offBy": 12.4
+        },
+        {
+          "from": "波特兰路",
+          "to": "高尔街",
+          "km": 0.6,
+          "bearing": 21.9,
+          "snap": "E",
+          "offBy": 21.9
+        },
+        {
+          "from": "高尔街",
+          "to": "国王十字",
+          "km": 0.95,
+          "bearing": 31.1,
+          "snap": "NE",
+          "offBy": -13.9
+        },
+        {
+          "from": "国王十字",
+          "to": "法灵顿街",
+          "km": 1.7,
+          "bearing": 321.1,
+          "snap": "SE",
+          "offBy": 6.1
+        }
+      ],
+      "reveal": {
+        "title": "图画好了，代价也来了",
+        "spacing": "图上每段一样长，地面上不是。波特兰路到高尔街 0.60 公里，国王十字到法灵顿街 1.70 公里——差 2.8 倍，图上却看不出来。",
+        "distortion": "所以有些站在图上隔着一格，走过去只要两三分钟，坐车反而更慢。后来的线路图会专门标出这些「走着更快」的组合。",
+        "history": "管理层起初嫌这张图太激进，1932 年才勉强试印。Frank Pick 看过之后说，比我们以往任何一张图都好。贝克此后做到 1959 年。"
+      },
+      "sources": [
+        "London Museum: How Harry Beck revolutionised the Tube map",
+        "各站坐标：Wikipedia geo 数据（现代继承站）"
+      ]
     }
-  ],
-  "legs": [
-    {
-      "from": "帕丁顿",
-      "to": "埃奇韦尔路",
-      "km": 0.76,
-      "bearing": 11.9,
-      "snap": "E",
-      "offBy": 11.9
-    },
-    {
-      "from": "埃奇韦尔路",
-      "to": "贝克街",
-      "km": 0.78,
-      "bearing": 16.6,
-      "snap": "E",
-      "offBy": 16.6
-    },
-    {
-      "from": "贝克街",
-      "to": "波特兰路",
-      "km": 0.93,
-      "bearing": 12.4,
-      "snap": "E",
-      "offBy": 12.4
-    },
-    {
-      "from": "波特兰路",
-      "to": "高尔街",
-      "km": 0.6,
-      "bearing": 21.9,
-      "snap": "E",
-      "offBy": 21.9
-    },
-    {
-      "from": "高尔街",
-      "to": "国王十字",
-      "km": 0.95,
-      "bearing": 31.1,
-      "snap": "NE",
-      "offBy": -13.9
-    },
-    {
-      "from": "国王十字",
-      "to": "法灵顿街",
-      "km": 1.7,
-      "bearing": 321.1,
-      "snap": "SE",
-      "offBy": 6.1
-    }
-  ],
-  "reveal": {
-    "title": "图画好了，代价也来了",
-    "spacing": "图上每段一样长，地面上不是。波特兰路到高尔街 0.60 公里，国王十字到法灵顿街 1.70 公里——差 2.8 倍，图上却看不出来。",
-    "distortion": "所以有些站在图上隔着一格，走过去只要两三分钟，坐车反而更慢。后来的线路图会专门标出这些「走着更快」的组合。",
-    "history": "管理层起初嫌这张图太激进，1932 年才勉强试印。Frank Pick 看过之后说，比我们以往任何一张图都好。贝克此后做到 1959 年。"
-  },
-  "sources": [
-    "London Museum: How Harry Beck revolutionised the Tube map",
-    "各站坐标：Wikipedia geo 数据（现代继承站）"
   ]
 }
