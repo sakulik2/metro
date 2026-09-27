@@ -1,0 +1,91 @@
+/*
+ * 硬币。--size 由组件按真实直径算出来（毫米 × 1.7）。
+ * 青铜和白银两种成色，只用底色和边缘明暗区分，不画浮雕也不加投影 ——
+ * 这一关要看的是大小对比，别的都是干扰。
+ */
+
+.coin {
+  width: var(--size);
+  height: var(--size);
+  flex: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font: 600 0.78rem/1 var(--sans);
+  letter-spacing: -0.02em;
+  /* 币面边缘：一圈内阴影当轮廓，比 border 更像金属边 */
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / .28);
+}
+
+/* 三便士 16mm、六便士 19mm 面上放不下两个字符 */
+.coin[data-small] .coin-mark {
+  font-size: 0.66rem;
+}
+
+.coin[data-metal="bronze"] {
+  background: #9A6134;
+  color: #FFF3E4;
+}
+
+.coin[data-metal="silver"] {
+  background: #B9BDC0;
+  color: #1C2226;
+}
+
+.coin-mark {
+  position: relative;
+  z-index: 1;
+}
+
+/* 叠了几枚：右上角一个小牌子 */
+.coin-count {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--brass);
+  color: #21160A;
+  font: 700 11px/18px var(--cond);
+  text-align: center;
+}
+
+/* 可点的硬币：抽屉里那些 */
+.coin-pick {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: transform .12s ease;
+}
+
+.coin-pick:hover:not(:disabled) {
+  transform: translateY(-3px);
+}
+
+.coin-pick:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.coin-pick:disabled {
+  cursor: not-allowed;
+  opacity: .42;
+}
+
+.coin-pick:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coin-pick {
+    transition: none;
+  }
+
+  .coin-pick:hover:not(:disabled) {
+    transform: none;
+  }
+}
