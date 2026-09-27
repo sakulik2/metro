@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tsbuildinfo
+*.local
+
+# 自查用的截图，不进历史
+shots/
