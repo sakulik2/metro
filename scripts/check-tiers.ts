@@ -151,27 +151,54 @@ ok(d.aidFor(0).bearing && d.aidFor(0).ghost, '绘图 第一遍必须给读数和
 ok(!d.aidFor(1).bearing && d.aidFor(1).ghost, '绘图 第二遍收走读数，留影线');
 ok(!d.aidFor(2).bearing && !d.aidFor(2).ghost, '绘图 第三遍两样都收走');
 
-// 退路：每一段、每一级都要说得出话，二级必须给出方向
-for (const [i, leg] of d.LEGS.entries()) {
-  const l1 = d.hintText(leg, d.hintLevelOf(1));
-  const l2 = d.hintText(leg, d.hintLevelOf(2));
-  ok(/\d/.test(l1 ?? ''), `绘图 第${i + 1}段 一级提示没给读数`);
-  ok((l2 ?? '').includes(d.DIR_NAME[leg.snap]),
-    `绘图 第${i + 1}段 二级提示没说出正解方向：${l2}`);
+// 退路：每条线每一段、每一级都要说得出话，二级必须给出方向
+for (const [s, set] of d.LINE_SETS.entries()) {
+  const at = `绘图 第${s + 1}条线 ${set.title}`;
+  for (const [i, leg] of set.legs.entries()) {
+    const l1 = d.hintText(leg, d.hintLevelOf(1));
+    const l2 = d.hintText(leg, d.hintLevelOf(2));
+    ok(/\d/.test(l1 ?? ''), `${at} 第${i + 1}段 一级提示没给读数`);
+    ok((l2 ?? '').includes(d.DIR_NAME[leg.snap]),
+      `${at} 第${i + 1}段 二级提示没说出正解方向：${l2}`);
+  }
+  // 第三档那句提示要带上这条线自己的站数和说法
+  const note = d.tierNote(2, set);
+  ok((note ?? '').includes(String(set.stations.length)),
+    `${at} 第三档提示没说出站数（${set.stations.length}）：${note}`);
+  ok(d.tierNote(0, set) === null, `${at} 第一遍不该显示难度提示`);
 }
-ok(d.hintText(d.LEGS[0], 0) === null, '绘图 0 级提示应当什么都不显示');
+
+const firstSet = d.LINE_SETS[0];
+ok(firstSet !== undefined, '绘图 一条线都没有');
+if (firstSet) {
+  ok(d.hintText(firstSet.legs[0]!, 0) === null, '绘图 0 级提示应当什么都不显示');
+}
 
 // 提示次数在画下一段和擦回去时都要归零，否则一次提示会一直挂着
 {
-  const b0 = d.newBoard();
+  const b0 = d.newBoard(0);
   const asked = d.draw(b0, { type: 'hint' });
   ok(asked.hintsUsed === 1, '绘图 要提示没记上');
   ok(d.draw(asked, { type: 'hint' }).hintsUsed === 2, '绘图 二级提示要不到');
   ok(d.draw(d.draw(asked, { type: 'hint' }), { type: 'hint' }).hintsUsed === 2,
     '绘图 提示级别没有封顶');
-  const drew = d.draw(asked, { type: 'draw', dir: d.LEGS[0].snap });
+  const drew = d.draw(asked, { type: 'draw', dir: firstSet!.legs[0]!.snap });
   ok(drew.hintsUsed === 0, '绘图 画下一段后提示次数没归零');
   ok(d.draw(drew, { type: 'undo' }).hintsUsed === 0, '绘图 擦回去后提示次数没归零');
+}
+
+/*
+ * 线的轮换，以及重画不能把线丢掉。
+ *
+ * 后者和售票窗口那条 run 的断言是同一个坑：丢了 set，按一下「重画一遍」
+ * 就会悄悄跳回第一条线。
+ */
+{
+  ok(d.setOf(d.SET_COUNT) === d.setOf(0), '绘图 线没有循环');
+  ok(d.setOf(d.SET_COUNT + 1) === d.setOf(1), '绘图 线循环错位');
+  const last = d.SET_COUNT - 1;
+  const b = d.draw(d.newBoard(last), { type: 'restart' });
+  ok(b.set === last, `绘图 重画把 set 从 ${last} 变成了 ${b.set}，线被换掉了`);
 }
 
 /* ── 通关计数 ─────────────────────────────────── */
@@ -195,7 +222,7 @@ if (bad.length) {
   process.exit(1);
 }
 
-const n = d.LEGS.length;
+const lines = d.LINE_SETS.map((s) => `${s.title} ${s.legs.length} 段`).join('、');
 console.log(
-  `难度档位没问题：三档逐层收紧，每一档都有两级退路（绘图 ${n} 段、售票 ${ROUNDS.length} 位乘客）。`,
+  `难度档位没问题：三档逐层收紧，每一档都有两级退路（绘图 ${lines}；售票 ${ROUNDS.length} 位乘客各 ${booking.VARIANT_COUNT} 套）。`,
 );
