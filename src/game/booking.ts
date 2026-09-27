@@ -2,9 +2,8 @@ import { COINS, coinById, fewestCoins, sumCoins } from '../money/coins';
 import { format, parse, type LSD } from '../money/lsd';
 import raw from './rounds.json';
 
-/** 一位乘客：要买什么票、递了什么钱。 */
-export type Round = {
-  id: string;
+/** 一位乘客的一套：要买什么票、递了什么钱。 */
+export type Variant = {
   who: string;
   asks: string;
   fare: LSD;
@@ -13,6 +12,22 @@ export type Round = {
   paid: string[];
   /** 找对之后讲给玩家的那一句。 */
   teach: string;
+};
+
+/**
+ * 窗口前的一位乘客，有三套。
+ *
+ * 重玩换的是这三套，而不只是少给提示 —— 五个固定金额记住比算出来容易，
+ * 那样第二遍考的是记性。变的只有「买几张」和「递什么钱」：
+ * 票价（三等 3d、二等 4d、头等 6d、儿童 2¾d）是查证过的史实，整数倍不是新史实；
+ * 递哪一枚也不是，九枚硬币 1863 年都在流通。
+ *
+ * theme 是这一位要讲的那件事，三套都得落在它上面 —— 换内容不能把课换掉。
+ */
+export type Round = {
+  id: string;
+  theme: string;
+  variants: Variant[];
 };
 
 /** 十进制日那一关：同一笔钱，四种都说得通的答案。 */
@@ -37,14 +52,15 @@ export type DecimalDay = {
   closing: string;
 };
 
-function readRound(r: unknown, i: number): Round {
-  if (typeof r !== 'object' || r === null) throw new Error(`第 ${i + 1} 位乘客不是对象`);
-  const o = r as Record<string, unknown>;
-  for (const k of ['id', 'who', 'asks', 'fare', 'fareNote', 'teach'] as const) {
-    if (typeof o[k] !== 'string' || !o[k]) throw new Error(`第 ${i + 1} 位乘客缺 ${k}`);
+/** 读一套，并当场验算：给的钱够不够，零钱凑不凑得出来。 */
+function readVariant(v: unknown, where: string): Variant {
+  if (typeof v !== 'object' || v === null) throw new Error(`${where} 不是对象`);
+  const o = v as Record<string, unknown>;
+  for (const k of ['who', 'asks', 'fare', 'fareNote', 'teach'] as const) {
+    if (typeof o[k] !== 'string' || !o[k]) throw new Error(`${where} 缺 ${k}`);
   }
   const paid = o.paid;
-  if (!Array.isArray(paid) || paid.length === 0) throw new Error(`第 ${i + 1} 位乘客没给钱`);
+  if (!Array.isArray(paid) || paid.length === 0) throw new Error(`${where} 没给钱`);
   for (const id of paid) {
     if (typeof id !== 'string' || !coinById(id)) throw new Error(`没有这枚硬币：${String(id)}`);
   }
@@ -52,20 +68,37 @@ function readRound(r: unknown, i: number): Round {
   const fare = parse(o.fare as string);
   const given = sumCoins(paid as string[]);
   if (given < fare) {
-    throw new Error(`第 ${i + 1} 位乘客给的钱不够票价（${format(given)} < ${format(fare)}）`);
+    throw new Error(`${where} 给的钱不够票价（${format(given)} < ${format(fare)}）`);
   }
   if (fewestCoins(given - fare) === null) {
-    throw new Error(`第 ${i + 1} 位乘客的零钱凑不出来：${format(given - fare)}`);
+    throw new Error(`${where} 的零钱凑不出来：${format(given - fare)}`);
   }
 
   return {
-    id: o.id as string,
     who: o.who as string,
     asks: o.asks as string,
     fare,
     fareNote: o.fareNote as string,
     paid: paid as string[],
     teach: o.teach as string,
+  };
+}
+
+function readRound(r: unknown, i: number): Round {
+  if (typeof r !== 'object' || r === null) throw new Error(`第 ${i + 1} 位乘客不是对象`);
+  const o = r as Record<string, unknown>;
+  for (const k of ['id', 'theme'] as const) {
+    if (typeof o[k] !== 'string' || !o[k]) throw new Error(`第 ${i + 1} 位乘客缺 ${k}`);
+  }
+  const vs = o.variants;
+  if (!Array.isArray(vs) || vs.length === 0) {
+    throw new Error(`第 ${i + 1} 位乘客没有 variants`);
+  }
+
+  return {
+    id: o.id as string,
+    theme: o.theme as string,
+    variants: vs.map((v, n) => readVariant(v, `第 ${i + 1} 位乘客第 ${n + 1} 套`)),
   };
 }
 
@@ -77,6 +110,22 @@ export const YEAR = Number(src.year ?? 1863);
 export const INTRO = String(src.intro ?? '');
 
 export const ROUNDS: Round[] = (src.rounds as unknown[]).map(readRound);
+
+/** 一共有几套可换。用来算重玩循环的周期。 */
+export const VARIANT_COUNT = Math.min(...ROUNDS.map((r) => r.variants.length));
+
+/**
+ * 第 run 遍该用哪一套。
+ *
+ * 取模循环，所以套数用完就从头来 —— 但难度已经封顶在第三档，
+ * 第四遍开始是「最难的规则 + 换过的内容」，不会退回简单。
+ */
+export function variantOf(round: Round, run: number): Variant {
+  const i = ((run % round.variants.length) + round.variants.length) % round.variants.length;
+  const v = round.variants[i];
+  if (!v) throw new Error(`第 ${i + 1} 套不存在`);
+  return v;
+}
 
 const dd = src.decimalDay as Record<string, unknown>;
 
@@ -109,6 +158,11 @@ export type Game = {
   stage: Stage;
   /** 第几位乘客。 */
   round: number;
+  /**
+   * 玩到第几遍（从 0 起）。决定用哪一套乘客，也决定难度档。
+   * 存在 Game 里而不是每次去读 localStorage：一局之内不能变。
+   */
+  run: number;
   /** 玩家从抽屉里拣出来的硬币，按点击顺序。 */
   tray: string[];
   /** 本局是否一次找对（没按过「重来」也没多给少给）。 */
@@ -133,18 +187,26 @@ export type Game = {
 /**
  * 开一局。
  *
+ * run 是玩到第几遍（通关次数），决定用哪一套乘客和哪一档难度。
  * stage 只有测试跳关会传：1971 那两幕在五位乘客之后，不给个入口就得每次
  * 从头数一遍钱。见 src/dev/testRoute.ts。
  */
-export const newGame = (stage: Stage = 'brief'): Game => ({
+export const newGame = (stage: Stage = 'brief', run = 0): Game => ({
   stage,
   round: stage === 'decimal' || stage === 'closed' ? ROUNDS.length - 1 : 0,
+  run,
   tray: [],
   cleanRuns: 0,
   decimalPick: null,
   hintsUsed: 0,
   rejected: false,
 });
+
+/** 这一局这一位乘客，是哪一套。 */
+export const roundOf = (g: Game): Variant | null => {
+  const r = ROUNDS[g.round];
+  return r ? variantOf(r, g.run) : null;
+};
 
 export type Move =
   | { type: 'begin' }
@@ -161,9 +223,9 @@ export type Move =
 
 /** 这一位乘客应该找回多少。 */
 export const changeDue = (g: Game): LSD => {
-  const r = ROUNDS[g.round];
-  if (!r) return 0;
-  return sumCoins(r.paid) - r.fare;
+  const v = roundOf(g);
+  if (!v) return 0;
+  return sumCoins(v.paid) - v.fare;
 };
 
 /** 托盘里现在有多少。 */
@@ -349,8 +411,12 @@ export function play(g: Game, move: Move): Game {
         ? { ...g, stage: 'closed' }
         : g;
 
+    /*
+     * 重开窗口。run 得带着 —— 丢掉它就会退回第一批乘客和第一档难度，
+     * 等于按一下「重开」就把攒到的进度抹了。
+     */
     case 'restart':
-      return newGame();
+      return newGame('brief', g.run);
   }
 }
 

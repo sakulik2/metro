@@ -17,13 +17,14 @@ import {
   newGame,
   play,
   rejectionOf,
+  roundOf,
   trayGap,
   trayTotal,
   type Stage,
 } from '../game/booking';
 import { coinById, tally } from '../money/coins';
 import { format, slash } from '../money/lsd';
-import { markCleared, tierFor } from '../state/cleared';
+import { markCleared, runFor, tierOf } from '../state/cleared';
 import { CoinFace } from './CoinFace';
 import './BookingOffice.css';
 
@@ -33,17 +34,21 @@ import './BookingOffice.css';
  */
 /** stage 只有测试跳关会传，见 src/dev/testRoute.ts。 */
 export function BookingOffice({ stage }: { stage?: Stage } = {}) {
-  const [game, move] = useReducer(play, stage, newGame);
-
   /*
-   * 难度只在挂载时读一次。每次渲染都读的话，本局通关把次数 +1 之后，
-   * 提示会在玩家眼前忽然消失。
+   * 通关次数只在挂载时读一次，一局之内定死。
+   *
+   * 它同时决定两件事：用哪一套乘客（内容），和拆掉多少提示（难度）。
+   * 每次渲染都去读的话，本局通关把次数 +1，乘客会在玩家眼前换人。
    */
-  const [tier] = useState(() => tierFor('booking'));
+  const [run] = useState(() => runFor('booking'));
+  const [game, move] = useReducer(play, undefined, () => newGame(stage, run));
+
+  const tier = tierOf(run);
   const aid = aidFor(tier);
   const note = TIER_NOTE[tier];
 
-  const round = ROUNDS[game.round];
+  // 这一遍这一位乘客用哪一套：买几张、递什么钱，都在这里换
+  const round = roundOf(game);
   const due = changeDue(game);
   const inTray = trayTotal(game);
   const gap = trayGap(game);

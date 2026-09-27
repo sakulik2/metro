@@ -17,6 +17,14 @@ export type Cleared = Record<string, number>;
 /** 这一关玩到第几遍的难度。0 = 第一遍，带全部提示。 */
 export type Tier = 0 | 1 | 2;
 
+/**
+ * 这一关玩过几遍（0 = 头一遍）。
+ *
+ * 和 tierFor 的区别：这个数不封顶，因为内容要按它循环 ——
+ * 难度到第三档就到顶了，内容还得接着换，否则第四遍又回到第一批乘客。
+ */
+export const runFor = (game: string): number => readCleared()[game] ?? 0;
+
 /** 难度到第 2 档就封顶：再往上没有能拆的提示了。 */
 export const tierOf = (cleared: number): Tier =>
   cleared >= 2 ? 2 : cleared >= 1 ? 1 : 0;
