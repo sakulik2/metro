@@ -48,6 +48,12 @@ Prefer this over a throwaway entry that mounts a single component. Such a previe
 
 `phase` (`src/data/types.ts`) is `'ride' | 'game' | 'transfer' | 'end'`. Walking a line to its last stop goes to `'game'` if that line has one registered, otherwise straight to `'transfer'` (or `'end'` on the last line). Leaving a game resumes that flow.
 
+### The drawing board's per-line colour
+
+Each line carries its own `colour` / `colourHover`, applied as an inline `--route` on the section. **It cannot be called `--line`** — `App.tsx` writes that onto `documentElement` as the global line colour, so the name is taken.
+
+`check:drawing` enforces a contrast floor: ≥4.5:1 against the paper (`#E6E9E0`) and ≥3:1 against the printed grid (`#C3CCC0`). That is not ceremony — Lexington green at its real PMS 355 value manages only 2.43:1 against the grid, so a 9px stroke crossing grid lines goes muddy. The IRT therefore uses a darkened `#006B2D`, recorded in the data's `colourNote` as a reasoned choice rather than a sourced 1904 colour, since the line predates the colour system entirely. Its hover *darkens* where London's brightens, because green has no headroom at that lightness; the CSS says so, or someone will "fix" the asymmetry.
+
 ### The booking office spans two eras
 
 `BookingOffice` covers 1863 and 1971, so it carries **two palettes switched by `data-era`** on the section. The custom properties are named for their role (`--ground`, `--accent`, `--slip`, `--face`, `--edge`…), not for their material — calling the slot `--wood` made the 1971 values a lie, which is why they were renamed. `CoinFace.css` reads `--accent` and `--on-accent` from that scope, so the coins follow the era too.
@@ -60,10 +66,14 @@ Prefer this over a throwaway entry that mounts a single component. Such a previe
 
 `src/state/cleared.ts` is the **only persistence in the project** (`localStorage`, key `metro:cleared`). It holds a per-game clear count, which drives two things:
 
-- **Content** — `runFor(game)` is uncapped. Each booking-office passenger has three `variants`, picked by `variantOf(round, run)`, cycling when they run out.
-- **Difficulty** — `tierOf(count)` caps at 2. Tier 1 is as before; tier 2 drops the "该找" line and the tray's running gap; tier 3 also demands the fewest coins.
+- **Content** — `runFor(game)` is uncapped. Booking-office passengers have three `variants` each, picked by `variantOf(round, run)`; the drawing board has two `LINE_SETS`, picked by `setOf(run)`. Both cycle when they run out.
+- **Difficulty** — `tierOf(count)` caps at 2. Booking: tier 2 drops the "该找" line and the tray's running gap, tier 3 also demands the fewest coins. Drawing: tier 2 drops the bearing readout, tier 3 the geography ghost too.
 
-Both halves are needed. Withholding hints alone makes a replay reward *remembering* the five amounts rather than doing the subtraction, so `check:tiers` requires every amount within a passenger to be distinct. Conversely, new content alone would leave the same scaffolding propping it up. **The fares themselves never vary** — they are verified history; what varies is how many tickets and which coin is handed over.
+Both halves are needed. Withholding hints alone makes a replay reward *remembering* the answers rather than working them out, so `check:tiers` requires every amount within a passenger to be distinct **and** no two drawing lines to share a straightened direction sequence. Conversely, new content alone would leave the same scaffolding propping it up.
+
+**The history never varies to make this work.** Fares are verified, so what varies is how many tickets and which coin is handed over. Lines are real lines, so a second one means actually researching one — note that *drawing the same line backwards does not count*: rounding is symmetric under a 180° rotation, so the reversed line has an identical leg ratio, direction count and per-leg `offBy`. It is a mirror, not a puzzle. `ROADMAP.md` records that dead end and the three candidate lines measured and rejected.
+
+The drawing board's second line also carries its own reveal rather than reusing Beck's — same 45° method, opposite verdict (Vignelli 1972, replaced 1979, vindicated 2025). A third line needs a third argument, or it is just new coordinates.
 
 Two traps, both already fallen into, that `check:tiers` now guards:
 
@@ -91,7 +101,9 @@ Adding a game means: data JSON + rules module in `src/game/`, component in `src/
 
 Question banks live one JSON per line in `src/data/lines/`, wired into `RAW` in `src/data/lines.ts`. The loader validates every entry at import time and throws naming the offending line and stop, rather than rendering a broken station. Same for `src/game/booking.ts`, which additionally refuses a round whose fare cannot be paid or whose change cannot be made from the coin set.
 
-**`src/game/drawing.json` is generated — never hand-edit it.** Bearings and distances come from station coordinates via `scripts/gen-drawing.mjs`; `check:drawing` recomputes them and fails on any drift.
+**`src/game/drawing.json` is generated — never hand-edit it.** Bearings, distances and `offBy` come from station coordinates via `scripts/gen-drawing.mjs`; `check:drawing` recomputes all three and fails on any drift. It holds a `lines` array, one entry per drawable line.
+
+The reveal's `spacing` sentence is **interpolated from `legs` at generation time**, not written by hand. It used to carry three numbers and two station names typed in, with nothing checking them — which would have silently paired London's prose with New York's legs. `check:drawing` keeps a cheap `String.includes` guard against someone hand-editing the JSON, but the real fix is that the figures have no hand-written source any more.
 
 ### Colour switches at runtime
 
@@ -106,7 +118,7 @@ These exist because each one caught a real bug. They are the closest thing this 
 - **`check:lines`** — the important one: a stop label must not give away its own answer. The line map shows every label from the moment you board, so labels like "波士顿" / "布达" published the answer before the question was read. Also checks answer indices, duplicate options, colliding line colours, over-long labels.
 - **`check:money`** — 36 assertions taken from `predecimal`'s own tests and the text of the Decimal Currency Act 1969. If the money is wrong the booking office has no point.
 - **`check:drawing`** — recomputes bearings/distances from coordinates, refuses a self-crossing polyline, and fails if the longest leg is under 1.5× the shortest, since then the level has nothing to reveal.
-- **`check:tiers`** — the replay difficulty. Tiers must tighten monotonically, every tier that withholds something must have a two-step hint that can get it back, the second step must yield something actionable, and a passenger's sets must ask for different amounts. It caught two amount collisions that had passed visual review.
+- **`check:tiers`** — the replay difficulty. Tiers must tighten monotonically, every tier that withholds something must have a two-step hint that can get it back, the second step must yield something actionable, a passenger's sets must ask for different amounts, and no two drawing lines may share a direction sequence. It caught two amount collisions that had passed visual review. It also pins that `restart` preserves the run and the line — dropping either would silently reset the player's progress on one button press.
 
 ## CI
 
