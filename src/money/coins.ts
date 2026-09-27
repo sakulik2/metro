@@ -1,4 +1,4 @@
-import { lsd, type LSD } from './lsd';
+import { FARTHINGS_PER_POUND, lsd, type LSD } from './lsd';
 
 /**
  * 1863 年售票窗口抽屉里会有的硬币。
@@ -45,21 +45,55 @@ export const sumCoins = (ids: string[]): LSD =>
 /**
  * 用最少的硬币凑出一个金额。
  *
- * 英国这套币制下贪心是最优的：每一枚都能被更小的若干枚整除地替代，
- * 所以先拿大的永远不会亏。返回 null 表示凑不出来（本游戏不会发生，
- * 因为有法寻，任何金额都凑得出）。
+ * **不能用贪心。** 这套币制里贪心会给出错的答案，因为半克朗（30d）不是
+ * 弗罗林（24d）的整数倍 —— 先拿走半克朗就再也凑不回最省的组合。
+ * 最明显的例子是 4s 0d：贪心拿 半克朗+先令+六便士 三枚，
+ * 其实两枚弗罗林就够。整个一镑范围内有 96 个金额贪心都会多算一枚，
+ * 全部落在 4s–4s 11¾d 这一段。
+ *
+ * 这不只是显示问题：第三档要求最少枚数才能交，贪心会把玩家凑对的
+ * 两枚判成不合格，逼他去凑一个更差的答案。
+ *
+ * 所以改用完全背包：dp[n] = 凑出 n 法寻最少几枚。金额上限是一镑
+ * （960 法寻），表很小，import 时算一次就够。返回 null 表示凑不出来
+ * （本游戏不会发生，有法寻在，任何整数金额都凑得出）。
  */
-export function fewestCoins(amount: LSD): string[] | null {
-  if (amount < 0) return null;
-  const picked: string[] = [];
-  let rest = amount;
-  for (const coin of [...COINS].sort((a, b) => b.value - a.value)) {
-    while (rest >= coin.value) {
-      rest -= coin.value;
-      picked.push(coin.id);
+const MAX_FARTHINGS = FARTHINGS_PER_POUND;
+
+/** dp[n] = 凑出 n 法寻最少几枚；from[n] = 那一步用掉哪一枚。 */
+const { best, from } = (() => {
+  const best = new Array<number>(MAX_FARTHINGS + 1).fill(Infinity);
+  const from = new Array<string | null>(MAX_FARTHINGS + 1).fill(null);
+  best[0] = 0;
+  for (let n = 1; n <= MAX_FARTHINGS; n++) {
+    for (const coin of COINS) {
+      if (coin.value > n) continue;
+      const prev = best[n - coin.value];
+      if (prev !== undefined && prev + 1 < (best[n] ?? Infinity)) {
+        best[n] = prev + 1;
+        from[n] = coin.id;
+      }
     }
   }
-  return rest === 0 ? picked : null;
+  return { best, from };
+})();
+
+export function fewestCoins(amount: LSD): string[] | null {
+  if (amount < 0 || !Number.isInteger(amount)) return null;
+  if (amount === 0) return [];
+  if (amount > MAX_FARTHINGS) return null;
+  if (best[amount] === Infinity) return null;
+
+  const picked: string[] = [];
+  let rest = amount;
+  while (rest > 0) {
+    const id = from[rest];
+    if (!id) return null;
+    picked.push(id);
+    rest -= coinById(id)?.value ?? 0;
+  }
+  // 大面值在前，和钱屉的读法一致
+  return picked.sort((a, b) => (coinById(b)?.value ?? 0) - (coinById(a)?.value ?? 0));
 }
 
 /** 同一种硬币拿了几枚，用来在托盘上叠着显示。 */

@@ -2,10 +2,20 @@
  * 校验 £sd 运算这份移植。数字取自 predecimal 自己的测试和法条原文 ——
  * 钱算错了，游戏就没有意义。
  */
+/*
+ * coins.ts 要用解析钩子：它里面 import '../money/lsd' 不带扩展名，Node 不认。
+ * 而且必须动态 import —— 静态 import 会在任何模块体执行前统一解析完，
+ * 钩子来不及注册。lsd.ts 本身没有相对 import，所以它可以静态引。
+ */
+import './resolve-src.ts';
+
 import {
+  FARTHINGS_PER_POUND,
   format, formatNewPence, lsd, parse, slash,
   toExactNewPence, toShopHalfNewPence, toStatutoryNewPence,
 } from '../src/money/lsd.ts';
+
+const { COINS, fewestCoins, sumCoins } = await import('../src/money/coins.ts');
 
 const fails: string[] = [];
 const eq = (got: unknown, want: unknown, what: string): void => {
@@ -77,6 +87,47 @@ eq(formatNewPence(lsd(0, 1)), '5p', '精确 1s 文字');
 for (let d = 1; d < 24; d++) {
   const { denominator } = toExactNewPence(lsd(0, 0, d));
   if (denominator === 1 && d !== 12) fails.push(`${d}d 竟是整数新便士，与前提矛盾`);
+}
+
+/*
+ * 最少枚数必须真的是最少。
+ *
+ * 这里不能用贪心：半克朗 30d 不是弗罗林 24d 的整数倍，先拿走半克朗就凑不回
+ * 最省的组合。4s 0d 是最小的反例 —— 贪心给三枚，两枚弗罗林就够。
+ * 一镑之内有 96 个这样的金额，全在 4s–4s 11¾d 那一段。
+ *
+ * 这条不只关乎显示：第三档要求最少枚数才能交，多算一枚就会把玩家凑对的
+ * 答案判成不合格，逼他去凑一个更差的。所以用一个独立的 DP 全量对照。
+ */
+{
+  const values = COINS.map((c) => c.value);
+  const opt = new Array<number>(FARTHINGS_PER_POUND + 1).fill(Infinity);
+  opt[0] = 0;
+  for (let n = 1; n <= FARTHINGS_PER_POUND; n++) {
+    for (const v of values) {
+      if (v <= n) opt[n] = Math.min(opt[n] ?? Infinity, (opt[n - v] ?? Infinity) + 1);
+    }
+  }
+
+  let worse = 0;
+  let wrongSum = 0;
+  for (let n = 0; n <= FARTHINGS_PER_POUND; n++) {
+    const got = fewestCoins(n);
+    if (got === null) {
+      fails.push(`${format(n)} 凑不出来，但有法寻在，任何金额都该凑得出`);
+      continue;
+    }
+    if (got.length !== opt[n]) worse++;
+    if (sumCoins(got) !== n) wrongSum++;
+  }
+  if (worse) fails.push(`有 ${worse} 个金额的「最少枚数」不是真的最少`);
+  if (wrongSum) fails.push(`有 ${wrongSum} 个金额的最少枚数组合加起来不等于原数`);
+
+  // 钉住那个具体的反例，免得将来有人又换回贪心
+  eq(fewestCoins(lsd(0, 4)), ['florin', 'florin'], '4s 0d 最少两枚弗罗林，不是半克朗+先令+六便士');
+  eq(fewestCoins(0), [], '零不需要硬币');
+  eq(fewestCoins(-1), null, '负数凑不出');
+  eq(fewestCoins(FARTHINGS_PER_POUND + 1), null, '超过一镑不在表里');
 }
 
 if (fails.length) {
