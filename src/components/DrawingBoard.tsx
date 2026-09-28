@@ -5,14 +5,20 @@ import {
   DIR_NAME,
   SET_COUNT,
   aidFor,
+  CELL,
+  PAD,
   allDrawn,
+  blendFrame,
+  canvasOf,
   draw,
+  fullFrame,
   geoPolyline,
   hintLevelOf,
   hintText,
   idealPolyline,
   lineOf,
   newBoard,
+  openingFrame,
   polyline,
   rightCount,
   spread,
@@ -23,9 +29,21 @@ import {
 import { markCleared, runFor, tierOf } from '../state/cleared';
 import './DrawingBoard.css';
 
-/** 网格一格多少像素，以及画布四周留白。 */
-const CELL = 74;
-const PAD = 52;
+/** 画完第 1 段之后停多久再拉远：先让玩家看清自己画了什么，塌缩才有对照。 */
+const HOLD_MS = 2000;
+/** 拉远本身多长。 */
+const ZOOM_MS = 900;
+
+const reducedMotion = (): boolean => {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+};
+
+/** 先慢后快再慢，镜头推拉的常见曲线。 */
+const ease = (t: number): number => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 /**
  * 绘图室。画哪条线由通关次数决定，见 src/game/drawing.ts 的 setOf()。
@@ -94,15 +112,63 @@ export function DrawingBoard({
 
   // 画布范围把三条折线都算进去：地理实况、正解、玩家画的
   const all = [...idealPts, ...drawnPts, ...geoPts];
-  const minX = Math.min(...all.map((p) => p.x));
-  const maxX = Math.max(...all.map((p) => p.x));
-  const minY = Math.min(...all.map((p) => p.y));
-  const maxY = Math.max(...all.map((p) => p.y));
+  const { w, h } = canvasOf(all);
 
-  const w = (maxX - minX) * CELL + PAD * 2;
-  const h = (maxY - minY) * CELL + PAD * 2;
-  const px = (x: number) => (x - minX) * CELL + PAD;
-  const py = (y: number) => (y - minY) * CELL + PAD;
+  /*
+   * 取景：zoom 是 0（开局放大）到 1（全图）之间的进度。
+   * 存进度而不是存取景本身，因为全图的范围会随玩家画出去的线变大。
+   * 这条线不需要放大时（伦敦）opening 是 null，zoom 恒为 1。
+   */
+  const opening = openingFrame(line);
+  const [zoom, setZoom] = useState(opening ? 0 : 1);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+
+  /*
+   * 第 1 段没画之前放大；画完停一下再拉远。擦回第 0 段就再推回去，
+   * 「重画一遍」也一样 —— 塌缩每画一遍都要重新看到一次。
+   * 已经画到第 2 段还没拉远（停顿时连按两下），就不再等。
+   */
+  const openAt = opening ? board.at : 1;
+  useEffect(() => {
+    const target = openAt === 0 ? 0 : 1;
+    const from = zoomRef.current;
+    if (from === target) return;
+
+    if (reducedMotion()) {
+      const id = window.setTimeout(() => setZoom(target), target === 1 && openAt === 1 ? HOLD_MS : 0);
+      return () => window.clearTimeout(id);
+    }
+
+    let raf = 0;
+    let start = 0;
+    const step = (now: number) => {
+      if (!start) start = now;
+      const t = Math.min(1, (now - start) / ZOOM_MS);
+      setZoom(from + (target - from) * ease(t));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    const id = window.setTimeout(
+      () => (raf = requestAnimationFrame(step)),
+      target === 1 && openAt === 1 ? HOLD_MS : 0,
+    );
+    return () => {
+      window.clearTimeout(id);
+      cancelAnimationFrame(raf);
+    };
+  }, [openAt]);
+
+  const full = fullFrame(all);
+  const frame = opening ? blendFrame(opening, full, zoom) : full;
+
+  // 取景中心落在画布中心。全图时和原来的固定画法逐像素相同。
+  const px = (x: number) => w / 2 + (x - frame.cx) * frame.cell;
+  const py = (y: number) => h / 2 + (y - frame.cy) * frame.cell;
+  // 方格跟着内容一起缩放，锚在全图时的原点上
+  const minX = Math.min(...all.map((p) => p.x));
+  const minY = Math.min(...all.map((p) => p.y));
+  const gridX = px(minX) - (PAD * frame.cell) / CELL;
+  const gridY = py(minY) - (PAD * frame.cell) / CELL;
 
   const leg = line.legs[board.at];
   const { min, max, ratio } = spread(line.legs);
@@ -142,9 +208,16 @@ export function DrawingBoard({
             aria-label={`线路图草稿，已画 ${board.at} 段，共 ${line.legs.length} 段`}
           >
             <defs>
-              <pattern id="grid" width={CELL / 2} height={CELL / 2} patternUnits="userSpaceOnUse">
+              <pattern
+                id="grid"
+                x={gridX}
+                y={gridY}
+                width={frame.cell / 2}
+                height={frame.cell / 2}
+                patternUnits="userSpaceOnUse"
+              >
                 <path
-                  d={`M ${CELL / 2} 0 L 0 0 0 ${CELL / 2}`}
+                  d={`M ${frame.cell / 2} 0 L 0 0 0 ${frame.cell / 2}`}
                   fill="none"
                   stroke="var(--grid)"
                   strokeWidth="1"

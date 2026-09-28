@@ -346,6 +346,83 @@ export function idealPolyline(legs: Leg[]): { x: number; y: number }[] {
   return pts;
 }
 
+/* ── 取景框 ─────────────────────────────────────── */
+
+/** 网格一格多少像素，以及画布四周留白。 */
+export const CELL = 74;
+export const PAD = 52;
+
+/** 画布尺寸。按全图在 CELL 比例下算，放大时也不变 —— 纸不能在玩家手里缩水。 */
+export function canvasOf(pts: { x: number; y: number }[]): { w: number; h: number } {
+  const xs = pts.map((p) => p.x);
+  const ys = pts.map((p) => p.y);
+  return {
+    w: (Math.max(...xs) - Math.min(...xs)) * CELL + PAD * 2,
+    h: (Math.max(...ys) - Math.min(...ys)) * CELL + PAD * 2,
+  };
+}
+
+/**
+ * 纸上的一个取景：以网格坐标 (cx, cy) 为中心，每格 cell 像素。
+ * 画布尺寸不跟着变，变的只有坐标 —— 线宽、圆点、字号都是按像素写的，
+ * 所以放大时它们不会跟着胖起来。viewBox 那条路试过，走不通，见 ROADMAP。
+ */
+export type Frame = { cx: number; cy: number; cell: number };
+
+/** 第 1 段地理影线在默认比例下短于这么多像素，就看不出方向，需要先放大。 */
+export const LEGIBLE_PX = 24;
+
+/** 放大之后，第 1 段地理影线在纸上有多长。 */
+export const OPEN_LEG_PX = 96;
+
+/** 框住全部的点，每格 CELL 像素。和原来的固定画法逐像素相同。 */
+export function fullFrame(pts: { x: number; y: number }[]): Frame {
+  const xs = pts.map((p) => p.x);
+  const ys = pts.map((p) => p.y);
+  return {
+    cx: (Math.min(...xs) + Math.max(...xs)) / 2,
+    cy: (Math.min(...ys) + Math.max(...ys)) / 2,
+    cell: CELL,
+  };
+}
+
+/**
+ * 开局的取景。返回 null 表示不用放大，一开始就是全图。
+ *
+ * 纽约 IRT 的第 1 段（市政厅→布鲁克林桥，0.17 公里）在默认比例下只有 6.9px，
+ * 第二档只剩影线时根本没法照着判断方向。所以开局先放大到这一段看得清，
+ * 画完这一段再拉远到全图 —— 刚才还占着半张纸的那一段当着玩家的面缩成一小截，
+ * 这个塌缩就是揭示本身。
+ *
+ * 伦敦第 1 段有 43px，不放大。玩家先在伦敦养成「一格就是一段」的预期，
+ * 到纽约再打破它，这是刻意的顺序。
+ *
+ * 中心**固定在第 1 站**，不看第 2 站在哪。框往哪边偏，就等于告诉玩家第 1 段
+ * 往哪画 —— 第三档没有影线时这会是唯一的线索。check:tiers 钉着这一条。
+ */
+export function openingFrame(line: LineSet): Frame | null {
+  const geo = geoPolyline(line.stations, line.legs);
+  const [a, b] = geo;
+  if (!a || !b) return null;
+  const first = Math.hypot(b.x - a.x, b.y - a.y);
+  if (first === 0 || first * CELL >= LEGIBLE_PX) return null;
+  return { cx: a.x, cy: a.y, cell: OPEN_LEG_PX / first };
+}
+
+/**
+ * 两个取景之间的过渡，t 从 0 到 1。
+ *
+ * 比例按对数插值：线性插值的话，放大十几倍的那一头会一闪而过，
+ * 剩下的时间全耗在最后那点缩放上。
+ */
+export function blendFrame(a: Frame, b: Frame, t: number): Frame {
+  return {
+    cx: a.cx + (b.cx - a.cx) * t,
+    cy: a.cy + (b.cy - a.cy) * t,
+    cell: Math.exp(Math.log(a.cell) + (Math.log(b.cell) - Math.log(a.cell)) * t),
+  };
+}
+
 /* ── 第二遍开始拆脚手架 ─────────────────────────── */
 
 /**
