@@ -234,6 +234,40 @@ if (firstSet) {
   }
 }
 
+/*
+ * 开局取景不能泄露第 1 段的方向。
+ *
+ * 取景框往第 2 站那边偏，就等于告诉玩家往哪画 —— 和「禁用按钮是泄露」同一类坑，
+ * 第三档没有影线时它会是唯一的线索。所以中心必须钉在第 1 站上。
+ * 同时要求：放大了的线，第 1 段真的变得看得清；全图的取景和原来的固定画法一致。
+ */
+d.LINE_SETS.forEach((set) => {
+  const at = `绘图 ${set.title}`;
+  const geo = d.geoPolyline(set.stations, set.legs);
+  const [a, b] = geo;
+  if (!a || !b) return;
+  const firstPx = Math.hypot(b.x - a.x, b.y - a.y) * d.CELL;
+  const open = d.openingFrame(set);
+
+  if (firstPx < d.LEGIBLE_PX) {
+    ok(open !== null, `${at} 第 1 段只有 ${firstPx.toFixed(1)}px，却没有放大`);
+  }
+  if (!open) return;
+  ok(open.cx === a.x && open.cy === a.y,
+    `${at} 开局取景没有以第 1 站为中心，框的偏向会透露第 1 段往哪画`);
+  const zoomedPx = Math.hypot(b.x - a.x, b.y - a.y) * open.cell;
+  ok(zoomedPx >= d.LEGIBLE_PX,
+    `${at} 放大之后第 1 段仍只有 ${zoomedPx.toFixed(1)}px`);
+  // 放大后的第 1 段要能放进纸里，否则第 2 站一开始就在框外
+  const { w, h } = d.canvasOf([...geo, ...d.idealPolyline(set.legs)]);
+  ok(zoomedPx < Math.min(w, h) / 2,
+    `${at} 放大后第 1 段 ${zoomedPx.toFixed(0)}px，超出了半张纸（${Math.min(w, h) / 2}px）`);
+
+  const full = d.fullFrame(geo);
+  const mid = d.blendFrame(open, full, 0.5);
+  ok(mid.cell < open.cell && mid.cell > full.cell, `${at} 过渡的比例没有落在两头之间`);
+});
+
 /* ── 通关计数 ─────────────────────────────────── */
 
 ok(cleared.tierOf(0) === 0 && cleared.tierOf(1) === 1 && cleared.tierOf(2) === 2,
