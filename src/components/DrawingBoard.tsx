@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import {
   COMPASS,
   DIR_ANGLE,
@@ -112,7 +112,30 @@ export function DrawingBoard({
 
   // 画布范围把三条折线都算进去：地理实况、正解、玩家画的
   const all = [...idealPts, ...drawnPts, ...geoPts];
-  const { w, h } = canvasOf(all);
+  const canvas = canvasOf(all);
+
+  /*
+   * 画布横向撑满整张纸，内容居中。
+   * 按内容算的宽度比纸窄时（纽约只有 326px），原来画布贴着左边，右边一大片
+   * 空纸没有方格；撑满之后方格铺满，取景中心落在纸的正中。
+   * 纸比内容还窄（手机）就保持内容宽度，由 .sheet 的横向滚动兜着。
+   */
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [sheetW, setSheetW] = useState(0);
+  useLayoutEffect(() => {
+    const el = sheetRef.current;
+    if (!el) return;
+    const measure = () => {
+      const cs = getComputedStyle(el);
+      setSheetW(el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const w = Math.max(canvas.w, Math.floor(sheetW));
+  const h = canvas.h;
 
   /*
    * 取景：zoom 是 0（开局放大）到 1（全图）之间的进度。
@@ -125,7 +148,7 @@ export function DrawingBoard({
   zoomRef.current = zoom;
 
   /*
-   * 第 1 段没画之前放大；画完停一下再拉远。擦回第 0 段就再推回去，
+   * 第 1 段没画之前放大；画完停一下再拉远。擦回第 0 段就直接切回放大，
    * 「重画一遍」也一样 —— 塌缩每画一遍都要重新看到一次。
    * 已经画到第 2 段还没拉远（停顿时连按两下），就不再等。
    */
@@ -135,8 +158,15 @@ export function DrawingBoard({
     const from = zoomRef.current;
     if (from === target) return;
 
+    // 回到第 0 段直接切回去，不做推近的动画：镜头只有拉远这一个动作
+    if (target === 0) {
+      setZoom(0);
+      return;
+    }
+
+    const hold = openAt === 1 ? HOLD_MS : 0;
     if (reducedMotion()) {
-      const id = window.setTimeout(() => setZoom(target), target === 1 && openAt === 1 ? HOLD_MS : 0);
+      const id = window.setTimeout(() => setZoom(1), hold);
       return () => window.clearTimeout(id);
     }
 
@@ -145,13 +175,10 @@ export function DrawingBoard({
     const step = (now: number) => {
       if (!start) start = now;
       const t = Math.min(1, (now - start) / ZOOM_MS);
-      setZoom(from + (target - from) * ease(t));
+      setZoom(from + (1 - from) * ease(t));
       if (t < 1) raf = requestAnimationFrame(step);
     };
-    const id = window.setTimeout(
-      () => (raf = requestAnimationFrame(step)),
-      target === 1 && openAt === 1 ? HOLD_MS : 0,
-    );
+    const id = window.setTimeout(() => (raf = requestAnimationFrame(step)), hold);
     return () => {
       window.clearTimeout(id);
       cancelAnimationFrame(raf);
@@ -161,7 +188,7 @@ export function DrawingBoard({
   const full = fullFrame(all);
   const frame = opening ? blendFrame(opening, full, zoom) : full;
 
-  // 取景中心落在画布中心。全图时和原来的固定画法逐像素相同。
+  // 取景中心落在画布中心。全图时比例和原来一样，每格 CELL 像素。
   const px = (x: number) => w / 2 + (x - frame.cx) * frame.cell;
   const py = (y: number) => h / 2 + (y - frame.cy) * frame.cell;
   // 方格跟着内容一起缩放，锚在全图时的原点上
@@ -198,7 +225,7 @@ export function DrawingBoard({
         )}
 
         {/* 方格纸 */}
-        <div className="sheet">
+        <div className="sheet" ref={sheetRef}>
           <svg
             className="sheet-svg"
             viewBox={`0 0 ${w} ${h}`}

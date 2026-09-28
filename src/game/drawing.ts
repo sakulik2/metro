@@ -375,7 +375,7 @@ export const LEGIBLE_PX = 24;
 /** 放大之后，第 1 段地理影线在纸上有多长。 */
 export const OPEN_LEG_PX = 96;
 
-/** 框住全部的点，每格 CELL 像素。和原来的固定画法逐像素相同。 */
+/** 框住全部的点，每格 CELL 像素，和不放大时的比例一样。 */
 export function fullFrame(pts: { x: number; y: number }[]): Frame {
   const xs = pts.map((p) => p.x);
   const ys = pts.map((p) => p.y);
