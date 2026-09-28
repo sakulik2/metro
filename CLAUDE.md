@@ -49,6 +49,10 @@ Prefer this over a throwaway entry that mounts a single component. Such a previe
 
 `phase` (`src/data/types.ts`) is `'intro' | 'ride' | 'game' | 'transfer' | 'end'`. `'intro'` is the opening screen, shown only until the player first presses 上车 — that press writes `metro:boarded`, a second `localStorage` key kept apart from `metro:cleared` because "has been here" is not any game's progress. `restart` skips it. Walking a line to its last stop goes to `'game'` if that line has one registered, otherwise straight to `'transfer'` (or `'end'` on the last line). Leaving a game resumes that flow.
 
+### The drawing board zooms once, on New York
+
+IRT's first leg is 6.9px at the normal scale, too short to read a direction off the ghost. So `openingFrame()` in `src/game/drawing.ts` zooms in until it is 96px, and after the first leg is drawn the board holds 2s and pulls back to the full sheet — the leg collapses in front of the player, which is the argument. London's first leg is 43px, under no threshold, so it renders exactly as before; that ordering is deliberate. The canvas size never changes, only the centre and pixels-per-cell inside `px()` / `py()`, animated with `requestAnimationFrame` — `viewBox` scales stroke widths, and `<polyline points>` cannot take a CSS transition.
+
 ### The drawing board's per-line colour
 
 Each line carries its own `colour` / `colourHover`, applied as an inline `--route` on the section. **It cannot be called `--line`** — `App.tsx` writes that onto `documentElement` as the global line colour, so the name is taken.
@@ -119,7 +123,7 @@ These exist because each one caught a real bug. They are the closest thing this 
 - **`check:lines`** — the important one: a stop label must not give away its own answer. The line map shows every label from the moment you board, so labels like "波士顿" / "布达" published the answer before the question was read. Also checks answer indices, duplicate options, colliding line colours, over-long labels.
 - **`check:money`** — 36 assertions taken from `predecimal`'s own tests and the text of the Decimal Currency Act 1969. If the money is wrong the booking office has no point.
 - **`check:drawing`** — recomputes bearings/distances from coordinates, refuses a self-crossing polyline, and fails if the longest leg is under 1.5× the shortest, since then the level has nothing to reveal.
-- **`check:tiers`** — the replay difficulty. Tiers must tighten monotonically, every tier that withholds something must have a two-step hint that can get it back, the second step must yield something actionable, a passenger's sets must ask for different amounts, and no two drawing lines may share a direction sequence. It caught two amount collisions that had passed visual review. It also pins that `restart` preserves the run and the line — dropping either would silently reset the player's progress on one button press.
+- **`check:tiers`** — the replay difficulty. Tiers must tighten monotonically, every tier that withholds something must have a two-step hint that can get it back, the second step must yield something actionable, a passenger's sets must ask for different amounts, and no two drawing lines may share a direction sequence. It caught two amount collisions that had passed visual review. It also pins that `restart` preserves the run and the line — dropping either would silently reset the player's progress on one button press. And it pins that the drawing board's opening zoom is centred on the first station, never biased toward the second — a frame that leans the way the first leg goes is a hint, and on tier 3 it would be the only one.
 
 ## CI
 
