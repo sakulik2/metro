@@ -37,6 +37,7 @@ To see a change in the app, `npm run dev` and then **jump straight to it with a 
 | `#/test/ticket` / `#/test/decimal` | the booking office, 1863 / 1971 |
 | `#/test/drawing` | the drawing room |
 | `#/test/end` | the network map |
+| `#/test/intro` | the opening screen, regardless of whether you have boarded before |
 
 Prefer this over a throwaway entry that mounts a single component. Such a preview lacks the app's ancestor chain, and that has already hidden a real bug: an absolutely-positioned element resolved against the wrong ancestor and flew 697px off-screen, which the standalone preview could not reproduce. **Verify against the real app.**
 
@@ -46,7 +47,7 @@ Prefer this over a throwaway entry that mounts a single component. Such a previe
 
 `src/state/journey.ts` holds `line`, `stop`, `phase`, `picks`. **Everything else is derived** — scores, per-stop verdicts, the platform-edge button label, which map nodes are filled. Adding a second source of truth for any of that is a bug, not a feature; the stop list and the quiz deliberately read the same `picks`.
 
-`phase` (`src/data/types.ts`) is `'ride' | 'game' | 'transfer' | 'end'`. Walking a line to its last stop goes to `'game'` if that line has one registered, otherwise straight to `'transfer'` (or `'end'` on the last line). Leaving a game resumes that flow.
+`phase` (`src/data/types.ts`) is `'intro' | 'ride' | 'game' | 'transfer' | 'end'`. `'intro'` is the opening screen, shown only until the player first presses 上车 — that press writes `metro:boarded`, a second `localStorage` key kept apart from `metro:cleared` because "has been here" is not any game's progress. `restart` skips it. Walking a line to its last stop goes to `'game'` if that line has one registered, otherwise straight to `'transfer'` (or `'end'` on the last line). Leaving a game resumes that flow.
 
 ### The drawing board's per-line colour
 
@@ -64,7 +65,7 @@ Each line carries its own `colour` / `colourHover`, applied as an inline `--rout
 
 ### Replays change the content, not just the difficulty
 
-`src/state/cleared.ts` is the **only persistence in the project** (`localStorage`, key `metro:cleared`). It holds a per-game clear count, which drives two things:
+`src/state/cleared.ts` is the game-progress persistence (`localStorage`, key `metro:cleared`; the only other key is `metro:boarded`, see above). It holds a per-game clear count, which drives two things:
 
 - **Content** — `runFor(game)` is uncapped. Booking-office passengers have three `variants` each, picked by `variantOf(round, run)`; the drawing board has two `LINE_SETS`, picked by `setOf(run)`. Both cycle when they run out.
 - **Difficulty** — `tierOf(count)` caps at 2. Booking: tier 2 drops the "该找" line and the tray's running gap, tier 3 also demands the fewest coins. Drawing: tier 2 drops the bearing readout, tier 3 the geography ghost too.

@@ -2,7 +2,7 @@ import type { Stage } from '../game/booking';
 import { SET_COUNT, setOf } from '../game/drawing';
 import { GAMES, LINES } from '../data/lines';
 import type { Picks } from '../data/types';
-import type { Journey } from '../state/journey';
+import { type Journey, openingJourney } from '../state/journey';
 
 /**
  * 测试用跳关路由。
@@ -23,7 +23,9 @@ export type Target =
    */
   | { kind: 'game'; line: number; stage?: Stage; set?: number }
   | { kind: 'transfer'; line: number }
-  | { kind: 'end' };
+  | { kind: 'end' }
+  /** 开场入口。不看 localStorage，总是停在介绍页。 */
+  | { kind: 'intro' };
 
 /** 别名 → 目标。名字取自游戏和线路自己的叫法，不另造一套词。 */
 const ALIASES: Record<string, () => Target | null> = {
@@ -44,6 +46,9 @@ const ALIASES: Record<string, () => Target | null> = {
   irt: () => drawingSet('irt'),
   纽约: () => drawingSet('irt'),
   '1904': () => drawingSet('irt'),
+  // 开场入口
+  intro: () => ({ kind: 'intro' }),
+  开场: () => ({ kind: 'intro' }),
   // 终点
   end: () => ({ kind: 'end' }),
   finish: () => ({ kind: 'end' }),
@@ -186,6 +191,8 @@ export function panelHref(loc: { pathname: string } = window.location): string {
  * 一路留空的话这两屏全是零，等于测不到东西。
  */
 export function journeyFor(target: Target): Journey {
+  if (target.kind === 'intro') return { ...openingJourney(false), tick: 1 };
+
   const picks: Picks = LINES.map((l) => l.questions.map(() => null));
 
   /** 把某条线某一段填成已答对。 */
@@ -243,5 +250,7 @@ export function describe(target: Target): string {
       return `${LINES[target.line]?.id} 号线走完，换乘页`;
     case 'end':
       return '终点，线网图';
+    case 'intro':
+      return '开场入口';
   }
 }

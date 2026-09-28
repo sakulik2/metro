@@ -82,6 +82,13 @@ export function TestPanel({ unknown }: { unknown?: string }) {
                 </li>
               );
             })}
+            {/* 开场入口平时只有头一回来才看得到，这里不管来没来过都能进 */}
+            <li>
+              <a href={hrefFor('intro')}>
+                <code>intro</code>
+                <span>开场入口</span>
+              </a>
+            </li>
             <li>
               <a href={hrefFor('end')}>
                 <code>end</code>
