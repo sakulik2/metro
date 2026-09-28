@@ -1,0 +1,76 @@
+/*
+ * 开场入口。站厅里那块「本站可换乘」的线路牌：每条线一行，号码牌用那条线自己的颜色。
+ * 这一屏的记忆点就是这几块彩色号码牌，其余保持安静。
+ */
+
+.intro-title {
+  margin: 0 0 8px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+/* 焦点落在这里让读屏读出标题，但不画焦点环。 */
+.intro-title:focus {
+  outline: none;
+}
+
+.intro-sub {
+  margin: 0 0 26px;
+  max-width: 34em;
+  font-size: 16px;
+  color: var(--body);
+}
+
+.intro-lines {
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+  max-width: 38em;
+}
+
+.intro-lines li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid var(--rail);
+}
+
+.intro-lines li:last-child {
+  border-bottom: 1px solid var(--rail);
+}
+
+.intro-name {
+  flex: none;
+  width: 3.4em;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.intro-count {
+  font: 600 14px/1 var(--cond);
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+/* 挂着游戏的线在行尾标一句，靠右，不和站数挤在一起 */
+.intro-game {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--body);
+}
+
+.intro-note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .intro-title {
+    font-size: 26px;
+  }
+}

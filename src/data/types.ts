@@ -24,6 +24,7 @@ export type Picks = (number | null)[][];
 
 /**
  * 旅程所处的阶段。
- * 'game' 是 1 号线走完后的售票窗口，那一关用 1863 年的真实票价练 £sd 找零。
+ * 'intro' 是上车前的开场入口，只有头一回来的人会经过。
+ * 'game' 是挂在某条线后面的小游戏，见 GAMES。
  */
-export type Phase = 'ride' | 'game' | 'transfer' | 'end';
+export type Phase = 'intro' | 'ride' | 'game' | 'transfer' | 'end';

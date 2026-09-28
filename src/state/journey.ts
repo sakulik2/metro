@@ -30,6 +30,14 @@ export const initialJourney: Journey = {
   tick: 0,
 };
 
+/**
+ * 打开页面时的旅程：头一回来先停在开场入口，来过的直接进第一站。
+ *
+ * 「重新乘坐」不经过这里，走的是 initialJourney —— 都坐到终点了，不必再看介绍。
+ */
+export const openingJourney = (boarded: boolean): Journey =>
+  boarded ? initialJourney : { ...initialJourney, phase: 'intro' };
+
 /** 当前这条线有几站。 */
 const stopsOn = (line: number): number => LINES[line]?.questions.length ?? 0;
 
@@ -49,6 +57,11 @@ export function journeyReducer(state: Journey, action: Action): Journey {
 
     case 'advance': {
       if (state.phase === 'end') return state;
+
+      // 开场入口：上车，停在第一条线第一站
+      if (state.phase === 'intro') {
+        return { ...state, phase: 'ride', tick: state.tick + 1 };
+      }
 
       if (state.phase === 'transfer') {
         return {
@@ -152,6 +165,7 @@ export const gameLabel = (j: Journey, done: boolean): string => {
 
 /** 站台边缘带上主按钮的文案。动作叫什么，按钮就叫什么。 */
 export const nextLabel = (j: Journey): string => {
+  if (j.phase === 'intro') return '上车';
   if (j.phase === 'transfer') return `换乘 ${j.line + 2} 号线`;
   const last = j.stop === stopsOn(j.line) - 1;
   if (!last) return '下一站';

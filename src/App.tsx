@@ -2,21 +2,23 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { LINES, TOTAL_STOPS, gameAfter, lineTitle } from './data/lines';
 import { panelHref } from './dev/testRoute';
 import type { Stage } from './game/booking';
+import { hasBoarded, markBoarded } from './state/boarded';
 import type { Journey } from './state/journey';
 import {
   answered,
   gameLabel,
-  initialJourney,
   journeyReducer,
   lineScore,
   markAt,
   missedOn,
   nextLabel,
+  openingJourney,
   pickAt,
   totalScore,
 } from './state/journey';
 import { BookingOffice } from './components/BookingOffice';
 import { DrawingBoard } from './components/DrawingBoard';
+import { Intro } from './components/Intro';
 import { LineMap } from './components/LineMap';
 import { NetworkMap } from './components/NetworkMap';
 import { PlatformEdge } from './components/PlatformEdge';
@@ -38,7 +40,10 @@ export function App({
   /** 从 /test 跳进小游戏时为 true：退出按钮回测试面板而不是继续流程。 */
   backToTest?: boolean;
 } = {}) {
-  const [journey, dispatch] = useReducer(journeyReducer, start ?? initialJourney);
+  // 惰性初始化：只在挂载时读一次 localStorage，不是每次渲染都读
+  const [journey, dispatch] = useReducer(journeyReducer, start, (s) =>
+    s ?? openingJourney(hasBoarded()),
+  );
   const [showList, setShowList] = useState(false);
   /*
    * 当前这一关玩完了没有。由游戏自己报上来（onDone），只用来决定站台边缘带
@@ -92,7 +97,8 @@ export function App({
         </div>
       </header>
 
-      {!showList && phase !== 'end' && (
+      {/* 开场入口自己列了全部线路，上面再挂一条 1 号线的线路图就重复了 */}
+      {!showList && phase !== 'end' && phase !== 'intro' && (
         <LineMap
           line={currentLine}
           title={lineTitle(line)}
@@ -107,6 +113,8 @@ export function App({
             <StopList pickAt={(l, s) => pickAt(journey, l, s)} />
           ) : (
             <div className="car" key={tick} ref={carRef}>
+              {phase === 'intro' && <Intro />}
+
               {phase === 'ride' && (
                 <Station
                   line={line}
@@ -171,6 +179,8 @@ export function App({
               window.location.href = panelHref();
               return;
             }
+            // 按下「上车」才算来过：只看了一眼就关掉的，下次还该看到介绍
+            if (phase === 'intro') markBoarded();
             dispatch({ type: 'advance' });
           }}
         />
