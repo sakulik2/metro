@@ -51,7 +51,7 @@ Prefer this over a throwaway entry that mounts a single component. Such a previe
 
 ### The drawing board zooms once, on New York
 
-IRT's first leg is 6.9px at the normal scale, too short to read a direction off the ghost. So `openingFrame()` in `src/game/drawing.ts` zooms in until it is 96px, and after the first leg is drawn the board holds 2s and pulls back to the full sheet — the leg collapses in front of the player, which is the argument. London's first leg is 43px, under no threshold, so it renders exactly as before; that ordering is deliberate. The canvas size never changes, only the centre and pixels-per-cell inside `px()` / `py()`, animated with `requestAnimationFrame` — `viewBox` scales stroke widths, and `<polyline points>` cannot take a CSS transition.
+IRT's first leg is 6.9px at the normal scale, too short to read a direction off the ghost. So `openingFrame()` in `src/game/drawing.ts` zooms in until it is 96px, and after the first leg is drawn the board holds 2s and pulls back to the full sheet — the leg collapses in front of the player, which is the argument. London's first leg is 43px, under no threshold, so it keeps the old scale; that ordering is deliberate. There is no zoom-in animation — undo or restart snaps back to the opening frame; the camera only ever pulls out. The canvas stretches to the sheet's width with content centred (measured with a `ResizeObserver`), since IRT's content is only 326px wide and used to hug the left edge. Within one board the canvas size never changes, only the centre and pixels-per-cell inside `px()` / `py()`, animated with `requestAnimationFrame` — `viewBox` scales stroke widths, and `<polyline points>` cannot take a CSS transition.
 
 ### The drawing board's per-line colour
 
